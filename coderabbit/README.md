@@ -9,11 +9,9 @@ CodeRabbit has a central configuration feature. It does not fit foundry today, s
 | Mechanism | How it works | Why it does not fit |
 | --- | --- | --- |
 | Central repo | An org repo named exactly `coderabbit` holds a root `.coderabbit.yaml`. CodeRabbit applies it to every repo with no config of its own. | The repo must be named `coderabbit`, so it cannot be foundry. A repo that has its own `.coderabbit.yaml` ignores it, so a YAML file never extends the base. |
-| TypeScript config | A repo's `.coderabbit.config.ts` can compose shared fragments with `includeRemote` and `mergeConfig`. | The docs show `includeRemote({ path: "base.ts" })`, a path inside the central `coderabbit` repo. Unverified: whether it can read another repo such as foundry. |
+| TypeScript config | A repo's `.coderabbit.config.ts` can compose shared fragments with `includeRemote` and `mergeConfig`. | The documented `includeRemote` examples read from the central `coderabbit` repo, not from foundry. |
 
 Source: https://docs.coderabbit.ai/configuration/central-configuration
-
-Decision for Pete: create `cteic/coderabbit` with a copy of `base.yaml`. Then repos with no `.coderabbit.yaml` inherit it with no opt-in step. Repos that need additions must still keep their own file, which replaces the central one, so the drift check stays useful.
 
 ## Use the drift check
 
