@@ -46,6 +46,8 @@ Add `boundary({ files, imports, globals, message })` to the array to keep a pack
 export { default } from '@cteic/prettier-config';
 ```
 
+Imports are sorted by `@ianvs/prettier-plugin-sort-imports`, so adopting the preset reorders imports once.
+
 ### `@cteic/vitest-config`
 
 ```ts
@@ -89,8 +91,14 @@ Add `renovate.json` to a repo:
 ## Release
 
 1. Add a changeset with your change: `pnpm changeset`.
-2. To cut a release, run `pnpm changeset version` on a branch off `dev`, commit, and merge it to `dev`.
-3. Merge `dev` into `main`. The `Release` workflow publishes any version not yet on npm and pushes the tags.
+2. On every push to `dev`, the `Release` workflow opens or updates a `chore: version packages` PR into `dev`. Merge it to bump versions and changelogs.
+3. Merge `dev` into `main`. The `Release` workflow publishes any version not yet on npm with trusted publishing and pushes the tags.
+
+The first publish needs owner setup on npm: see [docs/publishing.md](docs/publishing.md).
+
+## Licence
+
+Copyright (c) 2026 Pete Watters. Licensed under the GNU Affero General Public License v3.0 only (AGPL-3.0-only). See LICENSE. A commercial licence for use without the AGPL obligations is available from cteic: contact https://github.com/pete-watters.
 
 ## Branches
 

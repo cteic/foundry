@@ -2,7 +2,7 @@
   "name": "@cteic/prettier-config",
   "version": "0.0.0",
   "description": "Shared Prettier config for cteic projects",
-  "license": "UNLICENSED",
+  "license": "AGPL-3.0-only",
   "type": "module",
   "repository": {
     "type": "git",
@@ -17,7 +17,8 @@
     "./package.json": "./package.json"
   },
   "files": [
-    "dist"
+    "dist",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",

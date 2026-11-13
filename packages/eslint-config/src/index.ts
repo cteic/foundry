@@ -56,10 +56,12 @@ export function createConfig(options: CreateConfigOptions = {}): Config[] {
       },
     },
     js.configs.recommended,
-    ...tseslint.configs.recommendedTypeChecked.map((config) => ({
-      ...config,
-      files: typeScriptFiles,
-    })),
+    ...[...tseslint.configs.strictTypeChecked, ...tseslint.configs.stylisticTypeChecked].map(
+      (config) => ({
+        ...config,
+        files: typeScriptFiles,
+      })
+    ),
     {
       files: typeScriptFiles,
       languageOptions: { parserOptions },
