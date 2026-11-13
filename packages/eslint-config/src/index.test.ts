@@ -110,3 +110,22 @@ describe('severity', () => {
     expect(offenders).toEqual([]);
   });
 });
+
+describe('rule sets', () => {
+  it.each([
+    ['@typescript-eslint/no-unnecessary-condition', 'strictTypeChecked'],
+    ['@typescript-eslint/consistent-type-definitions', 'stylisticTypeChecked'],
+  ])('enables %s from %s as an error for TypeScript files', async (rule) => {
+    const resolved: unknown = await createEslint().calculateConfigForFile('clean.ts');
+    if (typeof resolved !== 'object' || resolved === null || !('rules' in resolved)) {
+      throw new Error('No resolved config for clean.ts');
+    }
+    const { rules } = resolved;
+    if (typeof rules !== 'object' || rules === null || !(rule in rules)) {
+      throw new Error(`Rule ${rule} is not enabled`);
+    }
+    const entry: unknown = Object.entries(rules).find(([name]) => name === rule)?.[1];
+
+    expect(Array.isArray(entry) ? entry[0] : entry).toBe(2);
+  });
+});

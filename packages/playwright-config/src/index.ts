@@ -15,7 +15,7 @@ export const screenshotDefaults: ScreenshotDefaults = {
 };
 
 function isCi(env: NodeJS.ProcessEnv): boolean {
-  const value = env['CI'];
+  const value = env.CI;
   return value !== undefined && value !== '' && value !== 'false';
 }
 
