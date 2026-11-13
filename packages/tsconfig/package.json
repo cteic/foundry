@@ -2,7 +2,7 @@
   "name": "@cteic/tsconfig",
   "version": "0.0.0",
   "description": "Strict TypeScript base configs for cteic projects",
-  "license": "UNLICENSED",
+  "license": "AGPL-3.0-only",
   "type": "module",
   "repository": {
     "type": "git",
@@ -16,7 +16,8 @@
   },
   "files": [
     "base.json",
-    "react.json"
+    "react.json",
+    "LICENSE"
   ],
   "publishConfig": {
     "access": "public",

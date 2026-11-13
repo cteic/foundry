@@ -96,6 +96,10 @@ Add `renovate.json` to a repo:
 
 The first publish needs owner setup on npm: see [docs/publishing.md](docs/publishing.md).
 
+## Licence
+
+Copyright (c) 2026 Pete Watters. Licensed under the GNU Affero General Public License v3.0 only (AGPL-3.0-only). See LICENSE. A commercial licence for use without the AGPL obligations is available from cteic: contact https://github.com/pete-watters.
+
 ## Branches
 
 `dev` is the default and integration branch. `main` is production.
