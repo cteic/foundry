@@ -13,7 +13,7 @@
     "format:check": "pnpm run build && prettier --check .",
     "lint": "pnpm run build && eslint .",
     "typecheck": "pnpm run build && pnpm --recursive run typecheck && tsc -p tsconfig.json",
-    "test": "pnpm run build && vitest run && node --test scripts/*.test.mjs",
+    "test": "pnpm run build && vitest run && node --test scripts/*.test.mjs && node scripts/check-coderabbit-drift.mjs .coderabbit.yaml",
     "changeset": "changeset"
   },
   "devDependencies": {
