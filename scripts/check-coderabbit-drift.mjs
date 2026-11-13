@@ -1,17 +1,24 @@
 #!/usr/bin/env node
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-import { dirname, resolve } from "node:path";
+import console from 'node:console';
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import process from 'node:process';
+import { fileURLToPath } from 'node:url';
 
-const BEGIN = "# BEGIN repo-specific";
-const END = "# END repo-specific";
+const BEGIN = '# BEGIN repo-specific';
+const END = '# END repo-specific';
 
 function normalise(text) {
-  return text.replace(/\r\n/g, "\n").replace(/[ \t]+$/gm, "").trimEnd() + "\n";
+  return (
+    text
+      .replace(/\r\n/g, '\n')
+      .replace(/[ \t]+$/gm, '')
+      .trimEnd() + '\n'
+  );
 }
 
 export function stripRegion(text) {
-  const lines = normalise(text).split("\n");
+  const lines = normalise(text).split('\n');
   const out = [];
   let inside = false;
   for (const line of lines) {
@@ -27,16 +34,16 @@ export function stripRegion(text) {
     if (!inside) out.push(line);
   }
   if (inside) throw new Error(`"${BEGIN}" has no matching "${END}"`);
-  return out.join("\n");
+  return out.join('\n');
 }
 
 export function firstDifference(base, repo) {
-  const a = base.split("\n");
-  const b = repo.split("\n");
+  const a = base.split('\n');
+  const b = repo.split('\n');
   const length = Math.max(a.length, b.length);
   for (let i = 0; i < length; i += 1) {
     if (a[i] !== b[i]) {
-      return { line: i + 1, expected: a[i] ?? "(end of file)", actual: b[i] ?? "(end of file)" };
+      return { line: i + 1, expected: a[i] ?? '(end of file)', actual: b[i] ?? '(end of file)' };
     }
   }
   return null;
@@ -53,14 +60,14 @@ export function check(baseText, repoText) {
       message: `drift at line ${diff.line} outside the repo-specific region\n  expected: ${diff.expected}\n  actual:   ${diff.actual}`,
     };
   }
-  return { ok: true, message: "matches base" };
+  return { ok: true, message: 'matches base' };
 }
 
 function main() {
-  const target = process.argv[2] ?? ".coderabbit.yaml";
+  const target = process.argv[2] ?? '.coderabbit.yaml';
   const here = dirname(fileURLToPath(import.meta.url));
-  const basePath = resolve(process.argv[3] ?? resolve(here, "../coderabbit/base.yaml"));
-  const result = check(readFileSync(basePath, "utf8"), readFileSync(target, "utf8"));
+  const basePath = resolve(process.argv[3] ?? resolve(here, '../coderabbit/base.yaml'));
+  const result = check(readFileSync(basePath, 'utf8'), readFileSync(target, 'utf8'));
   if (result.ok) {
     console.log(`ok: ${target} ${result.message}`);
     return;
