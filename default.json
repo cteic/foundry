@@ -1,0 +1,49 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "cteic shared Renovate preset. Repos extend it with github>cteic/foundry.",
+  "extends": [
+    "config:recommended",
+    ":semanticCommits",
+    ":semanticCommitTypeAll(chore)",
+    "helpers:pinGitHubActionDigests",
+    ":pinDevDependencies"
+  ],
+  "gitAuthor": "Pete Watters <2938440+pete-watters@users.noreply.github.com>",
+  "platformCommit": "disabled",
+  "timezone": "Europe/Dublin",
+  "schedule": ["before 9am on monday"],
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 2,
+  "minimumReleaseAge": "3 days",
+  "internalChecksFilter": "strict",
+  "labels": ["dependencies"],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 9am on monday"]
+  },
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["security"],
+    "schedule": ["at any time"],
+    "minimumReleaseAge": null
+  },
+  "osvVulnerabilityAlerts": true,
+  "packageRules": [
+    {
+      "description": "One weekly PR for all non-major updates of stable packages.",
+      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "matchCurrentVersion": "!/^v?0\\./",
+      "groupName": "non-major dependencies"
+    },
+    {
+      "description": "Group GitHub Actions digest and version bumps.",
+      "matchManagers": ["github-actions"],
+      "groupName": "github actions"
+    },
+    {
+      "description": "Major updates get their own PR and the major label so they are reviewed on purpose.",
+      "matchUpdateTypes": ["major"],
+      "addLabels": ["major"]
+    }
+  ]
+}
