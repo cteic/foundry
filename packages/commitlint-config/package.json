@@ -1,0 +1,42 @@
+{
+  "name": "@cteic/commitlint-config",
+  "version": "0.0.0",
+  "description": "Shared commitlint config for cteic projects: Conventional Commits with scopes",
+  "license": "UNLICENSED",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cteic/foundry.git",
+    "directory": "packages/commitlint-config"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "devDependencies": {
+    "@commitlint/lint": "21.2.4",
+    "@commitlint/load": "21.2.4",
+    "@cteic/tsconfig": "workspace:*",
+    "@types/node": "24.19.2",
+    "typescript": "6.0.3",
+    "vitest": "5.1.0"
+  },
+  "dependencies": {
+    "@commitlint/config-conventional": "21.2.4",
+    "@commitlint/types": "21.2.3"
+  }
+}
