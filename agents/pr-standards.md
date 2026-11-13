@@ -120,6 +120,8 @@ Post this right after you open the PR. Start with `@pete-watters`.
 | Pending | Decisions, blockers, open questions. Write "None" if empty |
 | Verification | What passed, which step you skipped and why, any manual step Pete must take (env vars, signups, smoke URLs, migrations) |
 
+Decisions, open questions and unverified notes go in the status comment or a Linear issue, never in repo files. A README describes the repo as it is. Example: "Decision: create a central config repo?" belongs in a Linear issue, not in `README.md`.
+
 ## Tests
 
 | Change | Required test | Example |
