@@ -18,14 +18,14 @@ The repo uses its own presets: `eslint.config.js`, `prettier.config.js`, `vitest
 
 | Command             | What it does                                       |
 | ------------------- | -------------------------------------------------- |
-| `pnpm format`       | Write Prettier formatting                          |
-| `pnpm format:check` | Fail on unformatted files                          |
+| `pnpm format`       | Build, then write Prettier formatting              |
+| `pnpm format:check` | Build, then fail on unformatted files              |
 | `pnpm lint`         | Build the packages, then run ESLint                |
 | `pnpm typecheck`    | Build, then `tsc` in every package and the root    |
 | `pnpm test`         | Build, then run every Vitest suite                 |
 | `pnpm changeset`    | Record a version bump for the packages you changed |
 
-Lint, typecheck and test build first because the root configs load the packages from `dist`.
+Every command except `pnpm changeset` builds first, because the root configs load the packages from `dist`.
 
 ## Add an ESLint rule
 

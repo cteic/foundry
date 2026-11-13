@@ -8,8 +8,8 @@
   },
   "scripts": {
     "build": "pnpm --recursive --filter './packages/*' run build",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format": "pnpm run build && prettier --write .",
+    "format:check": "pnpm run build && prettier --check .",
     "lint": "pnpm run build && eslint .",
     "typecheck": "pnpm run build && pnpm --recursive run typecheck && tsc -p tsconfig.json",
     "test": "pnpm run build && vitest run",
