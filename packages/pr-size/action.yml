@@ -1,0 +1,70 @@
+name: pr-size
+description: Fail a pull request that is too big to review, and say how to split it.
+
+inputs:
+  base:
+    description: Ref to compare with. Defaults to the pull request's base branch on origin.
+    default: ''
+  max-lines:
+    description: Most changed lines allowed. Empty uses the repo config, then 400.
+    default: ''
+  max-files:
+    description: Most changed files allowed. Empty uses the repo config, then 25.
+    default: ''
+  warn-at:
+    description: Fraction of a limit that triggers a warning. Empty uses the repo config, then 0.8.
+    default: ''
+  exclude:
+    description: Globs to leave out of the count, one per line.
+    default: ''
+  include-generated:
+    description: Set to true to count lockfiles, snapshots, dist, vendor, minified files and images.
+    default: 'false'
+  dry-run:
+    description: Set to true to report without failing the job.
+    default: 'false'
+  setup-node:
+    description: Set to false when the job already has Node 24 or later on the PATH.
+    default: 'true'
+
+runs:
+  using: composite
+  steps:
+    - if: inputs.setup-node == 'true'
+      uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      with:
+        node-version: '24'
+    - name: Check the pull request size
+      shell: bash
+      env:
+        PR_SIZE_BASE: ${{ inputs.base }}
+        PR_SIZE_BASE_BRANCH: ${{ github.base_ref }}
+        PR_SIZE_MAX_LINES: ${{ inputs.max-lines }}
+        PR_SIZE_MAX_FILES: ${{ inputs.max-files }}
+        PR_SIZE_WARN_AT: ${{ inputs.warn-at }}
+        PR_SIZE_EXCLUDE: ${{ inputs.exclude }}
+        PR_SIZE_INCLUDE_GENERATED: ${{ inputs.include-generated }}
+        PR_SIZE_DRY_RUN: ${{ inputs.dry-run }}
+      run: |
+        args=()
+        if [ -n "$PR_SIZE_BASE" ]; then
+          args+=(--base "$PR_SIZE_BASE")
+        elif [ -n "$PR_SIZE_BASE_BRANCH" ]; then
+          args+=(--base "origin/$PR_SIZE_BASE_BRANCH")
+        fi
+        if [ -n "$PR_SIZE_MAX_LINES" ]; then args+=(--max-lines "$PR_SIZE_MAX_LINES"); fi
+        if [ -n "$PR_SIZE_MAX_FILES" ]; then args+=(--max-files "$PR_SIZE_MAX_FILES"); fi
+        if [ -n "$PR_SIZE_WARN_AT" ]; then args+=(--warn-at "$PR_SIZE_WARN_AT"); fi
+        if [ "$PR_SIZE_INCLUDE_GENERATED" = 'true' ]; then args+=(--include-generated); fi
+        if [ "$PR_SIZE_DRY_RUN" = 'true' ]; then args+=(--dry-run); fi
+        while IFS= read -r glob; do
+          if [ -n "$glob" ]; then args+=(--exclude "$glob"); fi
+        done <<< "$PR_SIZE_EXCLUDE"
+
+        status=0
+        report=$(node "$GITHUB_ACTION_PATH/src/cli.ts" "${args[@]}") || status=$?
+        printf '%s\n' "$report"
+        if [ -n "$report" ] && [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+          printf '```text\n%s\n```\n' "$report" >> "$GITHUB_STEP_SUMMARY"
+        fi
+        exit "$status"
