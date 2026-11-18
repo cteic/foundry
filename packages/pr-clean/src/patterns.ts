@@ -73,6 +73,6 @@ export const creditPatterns: readonly CreditPattern[] = [
   },
 ];
 
-export const emDash = '—';
+export const emDash = '\u2014';
 
 export const allowMarker = 'pr-clean-allow';

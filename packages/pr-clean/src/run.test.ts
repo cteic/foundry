@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { emDash } from './patterns.ts';
 import { ownFiles, run } from './run.ts';
 
 interface Result {
@@ -81,7 +82,7 @@ function statuses(report: JsonReport): Record<string, string> {
 beforeEach(() => {
   repo = mkdtempSync(join(tmpdir(), 'pr-clean-'));
   git(ada, 'init', '--quiet', '--initial-branch', 'main');
-  write('README.md', '# Project\n\nOld text — with an em dash that predates the branch.\n');
+  write('README.md', `# Project\n\nOld text ${emDash} with an em dash that predates the branch.\n`);
   commitAll('chore: initial commit');
   git(ada, 'switch', '--quiet', '--create', 'feat/change');
   write('src/a.ts', 'export const a = 1;\n');
@@ -108,8 +109,8 @@ describe('pr-clean in a real repository', () => {
   });
 
   it('fails every rule on a branch with each mistake, and exits 1', () => {
-    write('docs/notes.md', 'A sentence — with a dash.\n\nBuilt with Cursor\n');
-    write('src/b.ts', '// a comment — in code\nexport const b = 2;\n');
+    write('docs/notes.md', `A sentence ${emDash} with a dash.\n\nBuilt with Cursor\n`);
+    write('src/b.ts', `// a comment ${emDash} in code\nexport const b = 2;\n`);
     commitAll('feat: add b\n\nCo-authored-by: Some Tool <tool@example.com>', tool);
 
     const result = prClean('--base', 'main', '--allow-author', owner, '--json');
@@ -152,7 +153,7 @@ describe('pr-clean in a real repository', () => {
   });
 
   it('turns a rule off with --skip', () => {
-    write('docs/notes.md', 'A sentence — with a dash.\n');
+    write('docs/notes.md', `A sentence ${emDash} with a dash.\n`);
     commitAll('docs: add notes', tool);
 
     const result = prClean('--base', 'main', '--skip', 'author', '--skip', 'em-dash', '--json');

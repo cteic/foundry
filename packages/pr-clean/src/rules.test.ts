@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { AddedLine } from './diff.ts';
+import { emDash } from './patterns.ts';
 import {
   checkAttribution,
   checkAuthors,
@@ -165,7 +166,7 @@ describe('checkAttribution', () => {
 });
 
 describe('checkEmDash', () => {
-  const dash = 'one — two';
+  const dash = `one ${emDash} two`;
 
   it('reports an em dash in an added line of a prose file', () => {
     expect(checkEmDash([], [added('docs/a.md', dash, 7)], undefined, prose)).toMatchObject([
