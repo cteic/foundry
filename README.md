@@ -2,11 +2,11 @@
 
 Shared engineering foundation for cteic products. Every product repo extends it instead of copying setup.
 
-| Layer              | What lives here                                                                                    |
-| ------------------ | -------------------------------------------------------------------------------------------------- |
-| Dependency updates | Renovate preset (`default.json`)                                                                   |
-| Configs            | Shared TypeScript, ESLint, Prettier, Vitest, Playwright and commitlint presets (`packages/`)       |
-| CI                 | Reusable GitHub Actions workflows: code checks, audit gate, PR checks, visual regression (planned) |
+| Layer              | What lives here                                                                                                                            |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Dependency updates | Renovate preset (`default.json`)                                                                                                           |
+| Configs            | Shared TypeScript, ESLint, Prettier, Vitest, Playwright and commitlint presets (`packages/`)                                               |
+| CI                 | Reusable GitHub Actions workflow for code checks (`.github/workflows/checks.yml`). Audit gate, PR checks and visual regression are planned |
 
 ## Config packages
 
@@ -86,6 +86,22 @@ Add `renovate.json` to a repo:
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["github>cteic/foundry"]
 }
+```
+
+## CI
+
+`.github/workflows/checks.yml` is a reusable workflow that only checks code. It installs with pnpm, then runs the format check, lint, typecheck and tests, plus a front-end build when `build-command` is set. Inputs set the Node version, the pnpm version, the working directory and each command. An empty command skips its step. The workflow reads the repo and nothing else: it holds no secrets and never releases or publishes.
+
+Set `rust: true` to add a job that runs `cargo fmt --check`, `cargo clippy` with warnings as errors, and `cargo test` in `rust-working-directory`. That job runs on macOS by default, because a Tauri app compiles there with no system packages and the checks cover the code that ships. For a Linux runner, set `rust-runner` and list the apt packages in `rust-linux-packages`. Call the workflow at a full commit SHA:
+
+```yaml
+jobs:
+  checks:
+    uses: cteic/foundry/.github/workflows/checks.yml@<commit sha>
+    with:
+      build-command: pnpm build
+      rust: true
+      rust-working-directory: apps/desktop/src-tauri
 ```
 
 ## Release
