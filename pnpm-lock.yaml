@@ -155,7 +155,7 @@ importers:
         specifier: 5.1.0
         version: 5.1.0(@types/node@24.19.2)(@vitest/coverage-v8@5.1.0)(vite@8.3.8(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1))
 
-  packages/pr-size:
+  packages/pr-clean:
     devDependencies:
       '@cteic/tsconfig':
         specifier: workspace:*
