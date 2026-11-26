@@ -88,6 +88,19 @@ Add `renovate.json` to a repo:
 }
 ```
 
+The preset rolls out foundry releases faster than other updates:
+
+| Update                                | What Renovate does                                                    |
+| ------------------------------------- | --------------------------------------------------------------------- |
+| Any `@cteic/*` release                | One `foundry` PR, opened on any day, first in the queue, with no wait |
+| `@cteic/*` patch on 0.x               | Merges on its own once checks pass                                    |
+| `@cteic/*` minor or patch from 1.0    | Merges on its own once checks pass                                    |
+| `@cteic/*` minor on 0.x, or any major | Waits for review                                                      |
+| React or Next.js major                | One PR that moves the framework and its types or companion packages   |
+| Other minor and patch updates         | One weekly `non-major dependencies` PR                                |
+
+On 0.x, Changesets records a breaking change as a minor bump, so 0.x minors wait for review.
+
 ## CI
 
 `.github/workflows/checks.yml` is a reusable workflow that only checks code. It installs with pnpm, then runs the format check, lint, typecheck and tests, plus a front-end build when `build-command` is set. Inputs set the Node version, the pnpm version, the working directory and each command. An empty command skips its step. The workflow reads the repo and nothing else: it holds no secrets and never releases or publishes.

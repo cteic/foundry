@@ -44,6 +44,40 @@
       "description": "Major updates get their own PR and the major label so they are reviewed on purpose.",
       "matchUpdateTypes": ["major"],
       "addLabels": ["major"]
+    },
+    {
+      "description": "A React major moves react, react-dom and their types in one PR, so they never drift apart.",
+      "matchPackageNames": ["react", "react-dom", "@types/react", "@types/react-dom"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "react"
+    },
+    {
+      "description": "A Next.js major moves next and its companion packages in one PR.",
+      "matchPackageNames": ["next", "eslint-config-next", "@next/**"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "next"
+    },
+    {
+      "description": "Foundry releases ship fast: one PR for every @cteic package, on any day, ahead of other PRs, with no release-age wait.",
+      "matchPackageNames": ["@cteic/**"],
+      "groupName": "foundry",
+      "schedule": ["at any time"],
+      "minimumReleaseAge": null,
+      "prPriority": 10
+    },
+    {
+      "description": "On 0.x a foundry minor can break, so only patches merge on their own.",
+      "matchPackageNames": ["@cteic/**"],
+      "matchCurrentVersion": "/^v?0\\./",
+      "matchUpdateTypes": ["patch"],
+      "automerge": true
+    },
+    {
+      "description": "From 1.0, foundry minors and patches merge on their own once checks pass.",
+      "matchPackageNames": ["@cteic/**"],
+      "matchCurrentVersion": "!/^v?0\\./",
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true
     }
   ]
 }
