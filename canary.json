@@ -1,0 +1,11 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "cteic canary preset. One app extends it after github>cteic/foundry to take each foundry release with no wait, 1 day before every other app.",
+  "packageRules": [
+    {
+      "description": "The canary app takes foundry releases as soon as they publish.",
+      "matchPackageNames": ["@cteic/**"],
+      "minimumReleaseAge": null
+    }
+  ]
+}

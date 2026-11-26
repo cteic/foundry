@@ -58,26 +58,28 @@
       "groupName": "next"
     },
     {
-      "description": "Foundry releases ship fast: one PR for every @cteic package, on any day, ahead of other PRs, with no release-age wait.",
+      "description": "Foundry releases ship fast: one PR for every @cteic package, on any day, ahead of other PRs. Apps wait 1 day so the canary app takes each release first.",
       "matchPackageNames": ["@cteic/**"],
       "groupName": "foundry",
       "schedule": ["at any time"],
-      "minimumReleaseAge": null,
+      "minimumReleaseAge": "1 day",
       "prPriority": 10
     },
     {
-      "description": "On 0.x a foundry minor can break, so only patches merge on their own.",
+      "description": "On 0.x a foundry minor can break, so only patches merge on their own. Renovate merges itself, so a repo with no passing checks never auto-merges.",
       "matchPackageNames": ["@cteic/**"],
       "matchCurrentVersion": "/^v?0\\./",
       "matchUpdateTypes": ["patch"],
-      "automerge": true
+      "automerge": true,
+      "platformAutomerge": false
     },
     {
-      "description": "From 1.0, foundry minors and patches merge on their own once checks pass.",
+      "description": "From 1.0, foundry minors and patches merge on their own once checks pass. Renovate merges itself, so a repo with no passing checks never auto-merges.",
       "matchPackageNames": ["@cteic/**"],
       "matchCurrentVersion": "!/^v?0\\./",
       "matchUpdateTypes": ["minor", "patch"],
-      "automerge": true
+      "automerge": true,
+      "platformAutomerge": false
     }
   ]
 }
