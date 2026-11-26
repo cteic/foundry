@@ -1,0 +1,26 @@
+{
+  "ci": {
+    "collect": {
+      "numberOfRuns": 5,
+      "settings": {
+        "chromeFlags": "--headless=new --no-sandbox"
+      }
+    },
+    "assert": {
+      "assertions": {
+        "largest-contentful-paint": [
+          "error",
+          { "maxNumericValue": 10000, "aggregationMethod": "median" }
+        ],
+        "total-blocking-time": [
+          "error",
+          { "maxNumericValue": 2000, "aggregationMethod": "median" }
+        ],
+        "cumulative-layout-shift": [
+          "error",
+          { "maxNumericValue": 0.5, "aggregationMethod": "median" }
+        ]
+      }
+    }
+  }
+}

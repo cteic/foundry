@@ -1,6 +1,6 @@
 {
   "name": "@cteic/validate",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Typed parsing of HTTP request input and third-party responses, with one error shape",
   "license": "AGPL-3.0-only",
   "type": "module",

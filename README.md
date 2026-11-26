@@ -2,11 +2,12 @@
 
 Shared engineering foundation for cteic products. Every product repo extends it instead of copying setup.
 
-| Layer              | What lives here                                                                                                                            |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| Dependency updates | Renovate preset (`default.json`)                                                                                                           |
-| Configs            | Shared TypeScript, ESLint, Prettier, Vitest, Playwright and commitlint presets (`packages/`)                                               |
-| CI                 | Reusable GitHub Actions workflow for code checks (`.github/workflows/checks.yml`). Audit gate, PR checks and visual regression are planned |
+| Layer              | What lives here                                                                                                                                                           |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Dependency updates | Renovate preset (`default.json`)                                                                                                                                          |
+| Configs            | Shared TypeScript, ESLint, Prettier, Vitest, Playwright and commitlint presets (`packages/`)                                                                              |
+| Libraries          | Shared code products import at runtime, starting with `@cteic/charts` (`packages/charts`)                                                                                 |
+| CI                 | Reusable GitHub Actions workflows for code checks, page speed, bundle size and build time (`.github/workflows/`). Audit gate, PR checks and visual regression are planned |
 
 ## Config packages
 
@@ -77,6 +78,12 @@ import { createCommitlintConfig } from '@cteic/commitlint-config';
 export default createCommitlintConfig({ scopes: ['web', 'worker', 'deps'] });
 ```
 
+## Libraries
+
+### `@cteic/charts`
+
+Dependency-free SVG charts. `@cteic/charts/core` turns data into SVG path strings with no React and no DOM. `@cteic/charts/react` wraps them in components: price, line, area, depth and sparkline charts. See [packages/charts/README.md](packages/charts/README.md).
+
 ## Use the Renovate preset
 
 Add `renovate.json` to a repo:
@@ -145,6 +152,33 @@ jobs:
       rust: true
       rust-working-directory: apps/desktop/src-tauri
 ```
+
+### Measurement workflows
+
+Three more reusable workflows measure a pull request and keep one comment up to date with the result. The budgets, the Lighthouse config and the measure script stay in the calling repo.
+
+| Workflow          | What it does                                                                   |
+| ----------------- | ------------------------------------------------------------------------------ |
+| `lighthouse.yml`  | Runs Lighthouse CI against a deployed preview and checks the repo's assertions |
+| `bundle-size.yml` | Builds, runs the repo's measure script and shows the change against the base   |
+| `build-bench.yml` | Times a cold and a cached build against the base. A report, never a failure    |
+
+```yaml
+jobs:
+  bundle-size:
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: cteic/foundry/.github/workflows/bundle-size.yml@<commit sha>
+    with:
+      build-dir: apps/web/dist
+```
+
+The calling job needs `contents: read` and `pull-requests: write`. No secret is needed. Set a budget only from a measured baseline: the median of at least five runs, with the machine and the command recorded. [docs/measurement.md](docs/measurement.md) has the caller snippet, the inputs and the script contract for each workflow.
+
+## Working with coding agents
+
+[docs/working-with-agents.md](docs/working-with-agents.md) teaches the habits for working with coding agents: twelve rules, each with a real case from a cteic repo and an exercise, plus a repo setup checklist and a 90-minute team session. The rules agents themselves follow live in [agents/](agents/README.md).
 
 ## Release
 

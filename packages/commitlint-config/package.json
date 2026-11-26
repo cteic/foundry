@@ -1,6 +1,6 @@
 {
   "name": "@cteic/commitlint-config",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Shared commitlint config for cteic projects: Conventional Commits with scopes",
   "license": "AGPL-3.0-only",
   "type": "module",

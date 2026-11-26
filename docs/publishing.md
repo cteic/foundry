@@ -15,7 +15,7 @@ The `Release` workflow publishes with npm trusted publishing (OIDC). It holds no
 
    This step assumes npm needs a package to exist before you can add a trusted publisher to it. The npm docs set trusted publishers from the package's settings page, which suggests that. **Unverified.** If npm lets you add a trusted publisher to a package that does not exist yet, skip this step.
 
-3. For each of the six packages, open its settings on npmjs.com and add a trusted publisher:
+3. For each package listed below, open its settings on npmjs.com and add a trusted publisher:
 
    | Field             | Value          |
    | ----------------- | -------------- |
@@ -39,3 +39,4 @@ The npm docs also say the first successful publish must happen within 2 days of 
 - `@cteic/vitest-config`
 - `@cteic/playwright-config`
 - `@cteic/commitlint-config`
+- `@cteic/charts`

@@ -1,6 +1,6 @@
 {
   "name": "@cteic/prettier-config",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Shared Prettier config for cteic projects",
   "license": "AGPL-3.0-only",
   "type": "module",

@@ -1,6 +1,6 @@
 {
   "name": "@cteic/fix-has-test",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CLI and GitHub Action that fail a pull request with a fix commit and no test change",
   "license": "AGPL-3.0-only",
   "type": "module",

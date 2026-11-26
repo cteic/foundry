@@ -1,6 +1,6 @@
 {
   "name": "@cteic/pr-clean",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CLI that checks a branch for wrong authorship, tool credit lines and em dashes before review",
   "license": "AGPL-3.0-only",
   "type": "module",

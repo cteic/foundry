@@ -1,0 +1,349 @@
+name: Build bench
+
+# Times a cold and a cached build with hyperfine, compares with the base commit
+# and comments the difference. This is a report, not a budget: times on shared
+# runners vary too much to fail a pull request on.
+#
+# The base is timed in the same job, on the same runner. Two runners can differ
+# by more than half on the same commit, so a timing stored from an earlier run
+# would not be comparable.
+
+on:
+  workflow_call:
+    inputs:
+      build-command:
+        description: Build command to time, run from the repo root.
+        type: string
+        default: pnpm build
+      clean-paths:
+        description: Space-separated build output paths to delete before each cold run. Globs are allowed.
+        type: string
+        default: ''
+      runs:
+        description: Timed runs per case, from 1 to 20.
+        type: number
+        default: 3
+      turbo-summary-task:
+        description: Turborepo task for a per-task time report, such as build. Empty by default, so no report is made.
+        type: string
+        default: ''
+      bench-script:
+        description: Repo script to run in place of the built-in bench. See docs/measurement.md for its contract.
+        type: string
+        default: ''
+      install-command:
+        description: Install command.
+        type: string
+        default: pnpm install --frozen-lockfile
+      node-version:
+        description: Node version for actions/setup-node.
+        type: string
+        default: '24'
+      pnpm-version:
+        description: pnpm version. Leave empty to use the packageManager field in package.json.
+        type: string
+        default: ''
+      hyperfine-version:
+        description: Exact version of hyperfine.
+        type: string
+        default: 2.0.0
+      hyperfine-sha256:
+        description: SHA-256 of hyperfine_<version>_amd64.deb. Set it whenever you set hyperfine-version.
+        type: string
+        default: 880ba127c51c7b9debde2d830fe27dedbfc92cf2885edd44f7dfbe2152f72afe
+      report-name:
+        description: Name of the PR comment and the artifact. Change it when one workflow calls this twice.
+        type: string
+        default: build-bench
+      timeout-minutes:
+        description: Time limit for the timing job.
+        type: number
+        default: 30
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ inputs.report-name }}-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bench:
+    name: Build bench
+    runs-on: ubuntu-24.04
+    timeout-minutes: ${{ inputs.timeout-minutes }}
+    permissions:
+      contents: read
+    outputs:
+      comment: ${{ steps.report.outputs.written }}
+    env:
+      BUILD_COMMAND: ${{ inputs.build-command }}
+      CLEAN_PATHS: ${{ inputs.clean-paths }}
+      RUNS: ${{ inputs.runs }}
+      TURBO_TASK: ${{ inputs.turbo-summary-task }}
+      BENCH_SCRIPT: ${{ inputs.bench-script }}
+      INSTALL_COMMAND: ${{ inputs.install-command }}
+      HYPERFINE_VERSION: ${{ inputs.hyperfine-version }}
+      HYPERFINE_SHA256: ${{ inputs.hyperfine-sha256 }}
+      REPORT_NAME: ${{ inputs.report-name }}
+    steps:
+      # Two commits deep: on a pull request the checkout is the merge commit,
+      # and its first parent is the base.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+      - name: Check the inputs
+        run: |
+          set -euo pipefail
+          fail() {
+            echo "::error::$1"
+            exit 1
+          }
+          [[ "$REPORT_NAME" =~ ^[a-z0-9][a-z0-9-]{0,63}$ ]] ||
+            fail "report-name must be lower-case letters, digits and hyphens."
+          [[ "$RUNS" =~ ^[0-9]{1,2}$ ]] || fail "runs must be a whole number from 1 to 20."
+          if [ "$RUNS" -lt 1 ] || [ "$RUNS" -gt 20 ]; then
+            fail "runs must be a whole number from 1 to 20."
+          fi
+          [[ "$HYPERFINE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] ||
+            fail "hyperfine-version must be an exact version, such as 2.0.0"
+          [[ "$HYPERFINE_SHA256" =~ ^[0-9a-f]{64}$ ]] || fail "hyperfine-sha256 must be 64 hex characters."
+          [[ "$TURBO_TASK" =~ ^[A-Za-z0-9:_#/-]*$ ]] || fail "turbo-summary-task is not a task name."
+          # These paths go into a shell command unquoted, so the character set is strict.
+          [[ "$CLEAN_PATHS" =~ ^[A-Za-z0-9._/*\ -]*$ ]] ||
+            fail "clean-paths may hold letters, digits, dots, slashes, hyphens, underscores, stars and spaces."
+          read -r -a clean <<< "$CLEAN_PATHS"
+          for path in "${clean[@]}"; do
+            [[ "$path" != /* && "$path" != -* && "$path" != *..* ]] ||
+              fail "clean-paths has an entry that is not a path inside the repo: $path"
+          done
+          if [ -n "$BENCH_SCRIPT" ]; then
+            [[ "$BENCH_SCRIPT" != /* && "$BENCH_SCRIPT" != *..* ]] || fail "bench-script must be a path inside the repo."
+            [ -f "$BENCH_SCRIPT" ] || fail "bench script not found: $BENCH_SCRIPT"
+          fi
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        with:
+          version: ${{ inputs.pnpm-version }}
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: pnpm
+      - name: Install
+        run: bash -euo pipefail -c "$INSTALL_COMMAND"
+      - name: Install hyperfine
+        run: |
+          set -euo pipefail
+          deb="hyperfine_${HYPERFINE_VERSION}_amd64.deb"
+          curl --fail --silent --show-error --location --retry 3 --output "$RUNNER_TEMP/$deb" \
+            "https://github.com/sharkdp/hyperfine/releases/download/v${HYPERFINE_VERSION}/$deb"
+          echo "$HYPERFINE_SHA256  $RUNNER_TEMP/$deb" | sha256sum --check --quiet
+          sudo dpkg --install "$RUNNER_TEMP/$deb"
+
+      - name: Time the builds
+        env:
+          IS_PULL_REQUEST: ${{ github.event_name == 'pull_request' }}
+        run: |
+          set -euo pipefail
+
+          # Times the checkout in the current directory and writes the results to $1.
+          #   cold    the clean paths and the Turborepo cache are deleted before each run
+          #   cached  nothing is deleted, so each run starts from the last build
+          bench() {
+            local out="$1"
+            if [ -n "$BENCH_SCRIPT" ]; then
+              BENCH_RUNS="$RUNS" BENCH_OUT="$out" bash "$BENCH_SCRIPT"
+              return
+            fi
+
+            mkdir -p "$out"
+            # A cache directory of its own, so the bench never reads a cache an
+            # earlier step filled. It has no effect in a repo without Turborepo.
+            export TURBO_CACHE_DIR="$PWD/.turbo/bench-cache"
+
+            {
+              echo "date: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+              echo "commit: $(git rev-parse --short HEAD)"
+              echo "os: $(uname -srm)"
+              echo "cpus: $(getconf _NPROCESSORS_ONLN)"
+              echo "node: $(node --version)"
+              echo "pnpm: $(pnpm --version)"
+              echo "hyperfine: $(hyperfine --version)"
+              echo "command: $BUILD_COMMAND"
+              echo "runs: $RUNS"
+            } | tee "$out/machine.txt"
+
+            # CLEAN_PATHS is a checked list of paths, so it is left unquoted on purpose.
+            hyperfine \
+              --runs "$RUNS" \
+              --prepare "rm -rf '$TURBO_CACHE_DIR' $CLEAN_PATHS" \
+              --command-name cold \
+              --export-json "$out/cold.json" \
+              --export-markdown "$out/cold.md" \
+              "$BUILD_COMMAND"
+
+            # The last cold run left the build output and the cache in place,
+            # and one warm-up run confirms it.
+            hyperfine \
+              --runs "$RUNS" \
+              --warmup 1 \
+              --command-name cached \
+              --export-json "$out/cached.json" \
+              --export-markdown "$out/cached.md" \
+              "$BUILD_COMMAND"
+
+            if [ -n "$TURBO_TASK" ]; then
+              # One more cold build, for the time per task.
+              # shellcheck disable=SC2086
+              rm -rf "$TURBO_CACHE_DIR" .turbo/runs $CLEAN_PATHS
+              pnpm exec turbo run "$TURBO_TASK" --summarize > /dev/null
+              cp .turbo/runs/*.json "$out/turbo-summary.json"
+            fi
+            rm -rf "$TURBO_CACHE_DIR"
+
+            # hyperfine reports the mean. The median is steadier, so it is
+            # worked out from the raw runs.
+            BENCH_OUT="$out" node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync } from 'node:fs';
+
+          const out = process.env.BENCH_OUT;
+
+          function summarise(name) {
+            const [result] = JSON.parse(readFileSync(`${out}/${name}.json`, 'utf8')).results;
+            // hyperfine 1 lists seconds in `times`. hyperfine 2 lists `measurements`.
+            const raw = result.times ?? result.measurements.map((run) => run.time_wall_clock.value);
+            const times = [...raw].sort((a, b) => a - b);
+            const mid = Math.floor(times.length / 2);
+            const median = times.length % 2 === 1 ? times[mid] : (times[mid - 1] + times[mid]) / 2;
+            return { median, min: times[0], max: times[times.length - 1], runs: times.length };
+          }
+
+          const summary = { cold: summarise('cold'), cached: summarise('cached') };
+          writeFileSync(`${out}/summary.json`, `${JSON.stringify(summary, null, 2)}\n`);
+          NODE
+          }
+
+          # The base is timed first, in a clone, so both sides are timed in the
+          # same kind of checkout on the same runner.
+          if [ "$IS_PULL_REQUEST" = true ] && git rev-parse --verify --quiet 'HEAD^2' > /dev/null; then
+            git branch --force foundry-bench-base 'HEAD^1'
+            git clone --quiet --branch foundry-bench-base "$GITHUB_WORKSPACE" "$RUNNER_TEMP/base"
+            if [ -n "$BENCH_SCRIPT" ]; then
+              # The base is timed with this branch's script.
+              mkdir -p "$(dirname "$RUNNER_TEMP/base/$BENCH_SCRIPT")"
+              cp "$BENCH_SCRIPT" "$RUNNER_TEMP/base/$BENCH_SCRIPT"
+            fi
+            # A base that no longer builds must not fail the pull request. The
+            # report then has no comparison with the base.
+            set +e
+            (
+              set -e
+              cd "$RUNNER_TEMP/base"
+              bash -euo pipefail -c "$INSTALL_COMMAND"
+              bench "$GITHUB_WORKSPACE/bench-base"
+            )
+            status=$?
+            set -e
+            if [ "$status" -ne 0 ]; then
+              echo "::warning::The base could not be timed, so the report has no comparison."
+              rm -rf "$GITHUB_WORKSPACE/bench-base"
+            fi
+          fi
+
+          bench "$GITHUB_WORKSPACE/bench-results"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: ${{ !cancelled() }}
+        with:
+          name: ${{ inputs.report-name }}
+          path: |
+            bench-results
+            bench-base
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Report
+        id: report
+        if: ${{ !cancelled() && hashFiles('bench-results/summary.json') != '' }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/comment"
+          OUT="$RUNNER_TEMP/comment/comment.md" node --input-type=module <<'NODE'
+          import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+
+          function isTiming(value) {
+            return (
+              typeof value === 'object' &&
+              value !== null &&
+              typeof value.median === 'number' &&
+              typeof value.min === 'number' &&
+              typeof value.max === 'number'
+            );
+          }
+          function readSummary(dir) {
+            const file = `${dir}/summary.json`;
+            if (!existsSync(file)) return {};
+            try {
+              return JSON.parse(readFileSync(file, 'utf8')) ?? {};
+            } catch {
+              return {};
+            }
+          }
+          function seconds(value) {
+            return `${value.toFixed(2)} s`;
+          }
+          function versusBase(head, base) {
+            if (!base) return 'no base timing';
+            const diff = head.median - base.median;
+            const sign = diff > 0 ? '+' : '';
+            return `${sign}${diff.toFixed(2)} s (${sign}${((diff / base.median) * 100).toFixed(1)}%)`;
+          }
+
+          const lines = [
+            '| Build | Median | Min | Max | Base median | vs base |',
+            '| --- | ---: | ---: | ---: | ---: | ---: |',
+          ];
+          const headSummary = readSummary('bench-results');
+          const baseSummary = readSummary('bench-base');
+          for (const name of ['cold', 'cached']) {
+            const head = headSummary[name];
+            if (!isTiming(head)) continue;
+            const base = isTiming(baseSummary[name]) ? baseSummary[name] : null;
+            lines.push(
+              `| ${name} | ${seconds(head.median)} | ${seconds(head.min)} | ${seconds(head.max)} | ${base ? seconds(base.median) : ''} | ${versusBase(head, base)} |`,
+            );
+          }
+
+          const subject = process.env.BENCH_SCRIPT
+            ? `\`${process.env.BENCH_SCRIPT.replace(/`/g, '')}\``
+            : `\`${process.env.BUILD_COMMAND.replace(/`/g, '')}\``;
+          const body = [
+            '### Build time',
+            '',
+            `${subject}, ${process.env.RUNS} timed runs per case with hyperfine on \`ubuntu-24.04\`. Shared runners vary, so read small differences as noise. The raw results are in the \`${process.env.REPORT_NAME}\` artifact.`,
+            '',
+            ...lines,
+            '',
+          ].join('\n');
+          writeFileSync(process.env.OUT, body);
+          NODE
+          cat "$RUNNER_TEMP/comment/comment.md" >> "$GITHUB_STEP_SUMMARY"
+          echo "written=true" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: ${{ !cancelled() && steps.report.outputs.written == 'true' }}
+        with:
+          name: ${{ inputs.report-name }}-comment
+          path: ${{ runner.temp }}/comment/comment.md
+          retention-days: 1
+
+  comment:
+    name: Comment
+    needs: bench
+    if: ${{ !cancelled() && needs.bench.outputs.comment == 'true' }}
+    permissions:
+      pull-requests: write
+    uses: ./.github/workflows/sticky-comment.yml
+    with:
+      marker: ${{ inputs.report-name }}
+      artifact: ${{ inputs.report-name }}-comment

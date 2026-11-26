@@ -1,0 +1,225 @@
+name: Bundle size
+
+# Builds the repo, measures the build with the caller's own script, compares
+# with the base commit and comments the table. The job fails when the script
+# exits non-zero. The budgets live in the caller's script, never here.
+#
+# The base measurement is cached by commit. A push run stores it, so most pull
+# requests build once. A pull request whose base has no stored measurement
+# builds the base too.
+
+on:
+  workflow_call:
+    inputs:
+      build-dir:
+        description: Build output directory to measure, relative to the repo root.
+        type: string
+        required: true
+      measure-script:
+        description: Node script that measures a build. See docs/measurement.md for its contract.
+        type: string
+        default: scripts/check-bundle-budget.mjs
+      build-dir-flag:
+        description: Flag the measure script takes for the build output directory.
+        type: string
+        default: --build-dir
+      build-command:
+        description: Build command, run from the repo root.
+        type: string
+        default: pnpm build
+      install-command:
+        description: Install command.
+        type: string
+        default: pnpm install --frozen-lockfile
+      node-version:
+        description: Node version for actions/setup-node.
+        type: string
+        default: '24'
+      pnpm-version:
+        description: pnpm version. Leave empty to use the packageManager field in package.json.
+        type: string
+        default: ''
+      report-name:
+        description: Name of the PR comment, the cache and the artifact. Change it when one workflow calls this twice.
+        type: string
+        default: bundle-size
+      timeout-minutes:
+        description: Time limit for the measuring job.
+        type: number
+        default: 20
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ inputs.report-name }}-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  measure:
+    name: Bundle size
+    runs-on: ubuntu-24.04
+    timeout-minutes: ${{ inputs.timeout-minutes }}
+    permissions:
+      contents: read
+    outputs:
+      comment: ${{ steps.report.outputs.written }}
+    env:
+      BUILD_DIR: ${{ inputs.build-dir }}
+      BUILD_DIR_FLAG: ${{ inputs.build-dir-flag }}
+      MEASURE_SCRIPT: ${{ inputs.measure-script }}
+      BUILD_COMMAND: ${{ inputs.build-command }}
+      INSTALL_COMMAND: ${{ inputs.install-command }}
+      REPORT_NAME: ${{ inputs.report-name }}
+    steps:
+      # Two commits deep: on a pull request the checkout is the merge commit,
+      # and its first parent is the base.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+      - name: Check the inputs
+        run: |
+          set -euo pipefail
+          fail() {
+            echo "::error::$1"
+            exit 1
+          }
+          [[ "$REPORT_NAME" =~ ^[a-z0-9][a-z0-9-]{0,63}$ ]] ||
+            fail "report-name must be lower-case letters, digits and hyphens."
+          [[ "$BUILD_DIR_FLAG" =~ ^--[a-z][a-z0-9-]*$ ]] || fail "build-dir-flag must look like --build-dir"
+          [[ -n "$BUILD_DIR" && "$BUILD_DIR" != /* && "$BUILD_DIR" != *..* ]] ||
+            fail "build-dir must be a path inside the repo."
+          [[ "$MEASURE_SCRIPT" != /* && "$MEASURE_SCRIPT" != *..* ]] ||
+            fail "measure-script must be a path inside the repo."
+          [ -f "$MEASURE_SCRIPT" ] || fail "measure script not found: $MEASURE_SCRIPT"
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        with:
+          version: ${{ inputs.pnpm-version }}
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: pnpm
+      - name: Install
+        run: bash -euo pipefail -c "$INSTALL_COMMAND"
+      - name: Build
+        run: bash -euo pipefail -c "$BUILD_COMMAND"
+
+      - name: Find the base commit
+        id: base
+        if: github.event_name == 'pull_request'
+        run: |
+          set -euo pipefail
+          if git rev-parse --verify --quiet 'HEAD^2' > /dev/null; then
+            echo "sha=$(git rev-parse 'HEAD^1')" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::The checkout is not a merge commit, so there is no base to compare with."
+          fi
+
+      - name: Restore the base measurement
+        id: base-cache
+        if: steps.base.outputs.sha != ''
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: bundle-size-base.json
+          key: ${{ inputs.report-name }}-${{ steps.base.outputs.sha }}-${{ hashFiles(inputs.measure-script) }}
+
+      # The base is measured with this branch's script, so a change to the
+      # script itself never shows up as a size change.
+      - name: Build and measure the base
+        id: base-build
+        if: steps.base.outputs.sha != '' && steps.base-cache.outputs.cache-hit != 'true'
+        # A base that no longer builds must not fail the pull request. The
+        # report then has no comparison with the base.
+        continue-on-error: true
+        env:
+          BASE_SHA: ${{ steps.base.outputs.sha }}
+        run: |
+          set -euo pipefail
+          git worktree add --detach "$RUNNER_TEMP/base" "$BASE_SHA"
+          (
+            cd "$RUNNER_TEMP/base"
+            bash -euo pipefail -c "$INSTALL_COMMAND"
+            bash -euo pipefail -c "$BUILD_COMMAND"
+          )
+          # The script exits non-zero when the base is over budget. Its
+          # measurement is still wanted.
+          node "$MEASURE_SCRIPT" "$BUILD_DIR_FLAG" "$RUNNER_TEMP/base/$BUILD_DIR" --json bundle-size-base.json || true
+          [ -s bundle-size-base.json ]
+
+      - name: Store the base measurement for this pull request
+        if: steps.base-build.outcome == 'success'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: bundle-size-base.json
+          key: ${{ inputs.report-name }}-${{ steps.base.outputs.sha }}-${{ hashFiles(inputs.measure-script) }}
+
+      - name: Measure
+        id: measure
+        run: |
+          set -euo pipefail
+          args=("$BUILD_DIR_FLAG" "$BUILD_DIR" --json bundle-size.json --markdown bundle-size.md)
+          if [ -s bundle-size-base.json ]; then
+            args+=(--base bundle-size-base.json)
+          fi
+          node "$MEASURE_SCRIPT" "${args[@]}"
+
+      - name: Report
+        id: report
+        if: ${{ !cancelled() && hashFiles('bundle-size.md') != '' }}
+        env:
+          STATUS: ${{ steps.measure.outcome }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          BASE_SHA: ${{ steps.base.outputs.sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/comment"
+          if [ "$STATUS" = success ]; then
+            verdict='Within budget.'
+          else
+            verdict='Over budget. The job fails.'
+          fi
+          if [ -n "$BASE_SHA" ] && [ -s bundle-size-base.json ]; then
+            compared=" Compared with \`$BASE_REF\` at \`${BASE_SHA:0:7}\`."
+          else
+            compared=''
+          fi
+          {
+            echo '### Bundle size'
+            echo
+            echo "$verdict$compared"
+            echo
+            cat bundle-size.md
+          } > "$RUNNER_TEMP/comment/comment.md"
+          cat "$RUNNER_TEMP/comment/comment.md" >> "$GITHUB_STEP_SUMMARY"
+          echo "written=true" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: ${{ !cancelled() && steps.report.outputs.written == 'true' }}
+        with:
+          name: ${{ inputs.report-name }}-comment
+          path: ${{ runner.temp }}/comment/comment.md
+          retention-days: 1
+
+      # Stored under this commit, so pull requests based on it skip the base build.
+      - name: Name the measurement as a base
+        id: as-base
+        if: ${{ !cancelled() && github.event_name == 'push' && hashFiles('bundle-size.json') != '' }}
+        run: cp bundle-size.json bundle-size-base.json
+      - name: Store the measurement for later pull requests
+        if: ${{ !cancelled() && steps.as-base.outcome == 'success' }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: bundle-size-base.json
+          key: ${{ inputs.report-name }}-${{ github.sha }}-${{ hashFiles(inputs.measure-script) }}
+
+  comment:
+    name: Comment
+    needs: measure
+    if: ${{ !cancelled() && needs.measure.outputs.comment == 'true' }}
+    permissions:
+      pull-requests: write
+    uses: ./.github/workflows/sticky-comment.yml
+    with:
+      marker: ${{ inputs.report-name }}
+      artifact: ${{ inputs.report-name }}-comment
