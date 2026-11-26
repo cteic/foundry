@@ -36,6 +36,7 @@ jobs:
     name: Changeset present
     if: >-
       github.event_name == 'pull_request' &&
+      !(github.head_ref == 'dev' && github.base_ref == 'main') &&
       !startsWith(github.head_ref, 'changeset-release/') &&
       !startsWith(github.head_ref, 'renovate/')
     runs-on: ubuntu-latest
