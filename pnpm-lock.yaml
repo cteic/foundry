@@ -47,6 +47,9 @@ importers:
       '@commitlint/load':
         specifier: 21.2.4
         version: 21.2.4(typescript@6.0.3)
+      '@cteic/charts':
+        specifier: workspace:*
+        version: link:../../packages/charts
       '@cteic/commitlint-config':
         specifier: workspace:*
         version: link:../../packages/commitlint-config
@@ -71,12 +74,18 @@ importers:
       '@types/node':
         specifier: 24.19.2
         version: 24.19.2
+      '@types/react':
+        specifier: 19.3.3
+        version: 19.3.3
       eslint:
         specifier: 10.14.0
         version: 10.14.0(jiti@2.7.0)
       prettier:
         specifier: 3.9.10
         version: 3.9.10
+      react:
+        specifier: 19.3.1
+        version: 19.3.1
       typescript:
         specifier: 6.0.3
         version: 6.0.3

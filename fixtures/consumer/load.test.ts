@@ -74,6 +74,20 @@ describe('minimal consumer', () => {
     expect(stdout).toContain('consumer smoke');
   });
 
+  it('@cteic/charts: core draws paths without React, react exports components', async () => {
+    const core = await import('@cteic/charts/core');
+    const react = await import('@cteic/charts/react');
+    const identity = (value: number) => value;
+    const points = [
+      { x: 0, y: 0 },
+      { x: 10, y: 20 },
+    ];
+
+    expect(core.generateLinePath(points, identity, identity)).toBe('M0,0L10,20');
+    expect(typeof react.PriceChart).toBe('function');
+    expect(typeof react.Sparkline).toBe('function');
+  });
+
   it('@cteic/commitlint-config: enforces the consumer scopes', async () => {
     const loaded = await load({}, { cwd: fixtureDir });
     const parserOpts = loaded.parserPreset?.parserOpts;
