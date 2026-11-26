@@ -1,6 +1,6 @@
 {
   "name": "@cteic/vitest-config",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Shared Vitest config for cteic projects",
   "license": "AGPL-3.0-only",
   "type": "module",

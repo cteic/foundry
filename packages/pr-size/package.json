@@ -1,6 +1,6 @@
 {
   "name": "@cteic/pr-size",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "CLI and GitHub Action that fail a pull request too big to review",
   "license": "AGPL-3.0-only",
   "type": "module",

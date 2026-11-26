@@ -1,6 +1,6 @@
 {
   "name": "@cteic/tsconfig",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Strict TypeScript base configs for cteic projects",
   "license": "AGPL-3.0-only",
   "type": "module",
