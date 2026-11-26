@@ -1,0 +1,8 @@
+{
+  "extends": "@cteic/tsconfig/react.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": ["*.ts"]
+}

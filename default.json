@@ -1,0 +1,85 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "cteic shared Renovate preset. Repos extend it with github>cteic/foundry.",
+  "extends": [
+    "config:recommended",
+    ":semanticCommits",
+    ":semanticCommitTypeAll(chore)",
+    "helpers:pinGitHubActionDigests",
+    ":pinDevDependencies"
+  ],
+  "gitAuthor": "Pete Watters <2938440+pete-watters@users.noreply.github.com>",
+  "platformCommit": "disabled",
+  "timezone": "Europe/Dublin",
+  "schedule": ["before 9am on monday"],
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 2,
+  "minimumReleaseAge": "3 days",
+  "internalChecksFilter": "strict",
+  "labels": ["dependencies"],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 9am on monday"]
+  },
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["security"],
+    "schedule": ["at any time"],
+    "minimumReleaseAge": null
+  },
+  "osvVulnerabilityAlerts": true,
+  "packageRules": [
+    {
+      "description": "One weekly PR for all non-major updates of stable packages.",
+      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "matchCurrentVersion": "!/^v?0\\./",
+      "groupName": "non-major dependencies"
+    },
+    {
+      "description": "Group GitHub Actions digest and version bumps.",
+      "matchManagers": ["github-actions"],
+      "groupName": "github actions"
+    },
+    {
+      "description": "Major updates get their own PR and the major label so they are reviewed on purpose.",
+      "matchUpdateTypes": ["major"],
+      "addLabels": ["major"]
+    },
+    {
+      "description": "A React major moves react, react-dom and their types in one PR, so they never drift apart.",
+      "matchPackageNames": ["react", "react-dom", "@types/react", "@types/react-dom"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "react"
+    },
+    {
+      "description": "A Next.js major moves next and its companion packages in one PR.",
+      "matchPackageNames": ["next", "eslint-config-next", "@next/**"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "next"
+    },
+    {
+      "description": "Foundry releases ship fast: one PR for every @cteic package, on any day, ahead of other PRs. Apps wait 1 day so the canary app takes each release first.",
+      "matchPackageNames": ["@cteic/**"],
+      "groupName": "foundry",
+      "schedule": ["at any time"],
+      "minimumReleaseAge": "1 day",
+      "prPriority": 10
+    },
+    {
+      "description": "On 0.x a foundry minor can break, so only patches merge on their own. Renovate merges itself, so a repo with no passing checks never auto-merges.",
+      "matchPackageNames": ["@cteic/**"],
+      "matchCurrentVersion": "/^v?0\\./",
+      "matchUpdateTypes": ["patch"],
+      "automerge": true,
+      "platformAutomerge": false
+    },
+    {
+      "description": "From 1.0, foundry minors and patches merge on their own once checks pass. Renovate merges itself, so a repo with no passing checks never auto-merges.",
+      "matchPackageNames": ["@cteic/**"],
+      "matchCurrentVersion": "!/^v?0\\./",
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true,
+      "platformAutomerge": false
+    }
+  ]
+}

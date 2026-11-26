@@ -1,0 +1,150 @@
+name: Checks
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        description: Node version for actions/setup-node.
+        type: string
+        default: '24'
+      pnpm-version:
+        description: pnpm version. Leave empty to use the packageManager field in package.json.
+        type: string
+        default: ''
+      working-directory:
+        description: Directory that holds package.json and pnpm-lock.yaml.
+        type: string
+        default: '.'
+      install-command:
+        description: Install command.
+        type: string
+        default: pnpm install --frozen-lockfile
+      format-command:
+        description: Format check command. Set to an empty string to skip.
+        type: string
+        default: pnpm format:check
+      lint-command:
+        description: Lint command. Set to an empty string to skip.
+        type: string
+        default: pnpm lint
+      typecheck-command:
+        description: Typecheck command. Set to an empty string to skip.
+        type: string
+        default: pnpm typecheck
+      test-command:
+        description: Test command. Set to an empty string to skip.
+        type: string
+        default: pnpm test
+      build-command:
+        description: Front-end build command. Empty by default, so no build runs.
+        type: string
+        default: ''
+      rust:
+        description: Run cargo fmt, cargo clippy and cargo test.
+        type: boolean
+        default: false
+      rust-working-directory:
+        description: Directory that holds Cargo.toml.
+        type: string
+        default: '.'
+      rust-toolchain:
+        description: Rust toolchain for rustup.
+        type: string
+        default: stable
+      rust-runner:
+        description: Runner for the Rust job. macOS by default, so no system packages are needed.
+        type: string
+        default: macos-latest
+      rust-linux-packages:
+        description: apt packages to install before the Rust checks. Used on a Linux runner only.
+        type: string
+        default: ''
+      rust-prepare-command:
+        description: Command to run in the Rust directory before the checks. Empty by default.
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.workflow }}-${{ github.ref }}-${{ inputs.working-directory }}
+  cancel-in-progress: true
+
+jobs:
+  node:
+    name: Format, lint, typecheck, test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        with:
+          version: ${{ inputs.pnpm-version }}
+          package_json_file: ${{ inputs.working-directory }}/package.json
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: pnpm
+          cache-dependency-path: ${{ inputs.working-directory }}/pnpm-lock.yaml
+      - name: Install
+        run: ${{ inputs.install-command }}
+      - name: Format check
+        if: inputs.format-command != ''
+        run: ${{ inputs.format-command }}
+      - name: Lint
+        if: inputs.lint-command != ''
+        run: ${{ inputs.lint-command }}
+      - name: Typecheck
+        if: inputs.typecheck-command != ''
+        run: ${{ inputs.typecheck-command }}
+      - name: Test
+        if: inputs.test-command != ''
+        run: ${{ inputs.test-command }}
+      - name: Build
+        if: inputs.build-command != ''
+        run: ${{ inputs.build-command }}
+
+  rust:
+    name: Rust fmt, clippy, test
+    if: inputs.rust
+    runs-on: ${{ inputs.rust-runner }}
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: ${{ inputs.rust-working-directory }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install system packages
+        if: runner.os == 'Linux' && inputs.rust-linux-packages != ''
+        env:
+          PACKAGES: ${{ inputs.rust-linux-packages }}
+        run: |
+          sudo apt-get update
+          # shellcheck disable=SC2086
+          sudo apt-get install --yes --no-install-recommends $PACKAGES
+      - name: Install the Rust toolchain
+        env:
+          TOOLCHAIN: ${{ inputs.rust-toolchain }}
+        run: |
+          rustup toolchain install "$TOOLCHAIN" --profile minimal --component rustfmt,clippy
+          rustup default "$TOOLCHAIN"
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: ${{ inputs.rust-working-directory }}
+      - name: Prepare
+        if: inputs.rust-prepare-command != ''
+        run: ${{ inputs.rust-prepare-command }}
+      - name: Format check
+        run: cargo fmt --check
+      - name: Clippy
+        run: cargo clippy --all-targets --locked -- -D warnings
+      - name: Test
+        run: cargo test --locked

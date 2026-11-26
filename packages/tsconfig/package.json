@@ -1,0 +1,29 @@
+{
+  "name": "@cteic/tsconfig",
+  "version": "1.0.0",
+  "description": "Strict TypeScript base configs for cteic projects",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cteic/foundry.git",
+    "directory": "packages/tsconfig"
+  },
+  "exports": {
+    "./base.json": "./base.json",
+    "./react.json": "./react.json",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "base.json",
+    "react.json",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "peerDependencies": {
+    "typescript": ">=5.8.0"
+  }
+}

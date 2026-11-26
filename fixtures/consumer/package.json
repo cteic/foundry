@@ -1,0 +1,24 @@
+{
+  "name": "@cteic/fixture-consumer",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@commitlint/lint": "21.2.4",
+    "@commitlint/load": "21.2.4",
+    "@cteic/commitlint-config": "workspace:*",
+    "@cteic/eslint-config": "workspace:*",
+    "@cteic/playwright-config": "workspace:*",
+    "@cteic/prettier-config": "workspace:*",
+    "@cteic/tsconfig": "workspace:*",
+    "@cteic/vitest-config": "workspace:*",
+    "@playwright/test": "1.65.0",
+    "@types/node": "24.19.2",
+    "eslint": "10.14.0",
+    "prettier": "3.9.10",
+    "typescript": "6.0.3",
+    "vitest": "5.1.0"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  }
+}

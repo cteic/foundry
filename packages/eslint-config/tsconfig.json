@@ -1,0 +1,9 @@
+{
+  "extends": "@cteic/tsconfig/base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": ["src"],
+  "exclude": ["src/fixtures"]
+}
