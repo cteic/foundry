@@ -1,0 +1,64 @@
+name: fix-has-test
+description: Fail a pull request that holds a fix commit and changes no test file.
+
+inputs:
+  base:
+    description: Ref to compare with. Defaults to the pull request's base branch on origin.
+    default: ''
+  types:
+    description: Commit types that need a test, comma separated. Empty uses the repo config, then fix.
+    default: ''
+  test-globs:
+    description: Globs that mark a test file, one per line. Empty uses the repo config, then the defaults.
+    default: ''
+  exempt-scopes:
+    description: Scopes exempt when the commit changes dependency files only, comma separated. Empty uses the repo config, then deps. Set to none to exempt no scope.
+    default: ''
+  dry-run:
+    description: Set to true to report without failing the job.
+    default: 'false'
+  setup-node:
+    description: Set to false when the job already has Node 24 or later on the PATH.
+    default: 'true'
+
+runs:
+  using: composite
+  steps:
+    - if: inputs.setup-node == 'true'
+      uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      with:
+        node-version: '24'
+    - name: Check that a fix ships with a test
+      shell: bash
+      env:
+        FIX_HAS_TEST_BASE: ${{ inputs.base }}
+        FIX_HAS_TEST_BASE_BRANCH: ${{ github.base_ref }}
+        FIX_HAS_TEST_TYPES: ${{ inputs.types }}
+        FIX_HAS_TEST_GLOBS: ${{ inputs.test-globs }}
+        FIX_HAS_TEST_EXEMPT_SCOPES: ${{ inputs.exempt-scopes }}
+        FIX_HAS_TEST_DRY_RUN: ${{ inputs.dry-run }}
+      run: |
+        args=()
+        if [ -n "$FIX_HAS_TEST_BASE" ]; then
+          args+=(--base "$FIX_HAS_TEST_BASE")
+        elif [ -n "$FIX_HAS_TEST_BASE_BRANCH" ]; then
+          args+=(--base "origin/$FIX_HAS_TEST_BASE_BRANCH")
+        fi
+        if [ -n "$FIX_HAS_TEST_TYPES" ]; then args+=(--types "$FIX_HAS_TEST_TYPES"); fi
+        if [ "$FIX_HAS_TEST_EXEMPT_SCOPES" = 'none' ]; then
+          args+=(--exempt-scopes '')
+        elif [ -n "$FIX_HAS_TEST_EXEMPT_SCOPES" ]; then
+          args+=(--exempt-scopes "$FIX_HAS_TEST_EXEMPT_SCOPES")
+        fi
+        if [ "$FIX_HAS_TEST_DRY_RUN" = 'true' ]; then args+=(--dry-run); fi
+        while IFS= read -r glob; do
+          if [ -n "$glob" ]; then args+=(--test-globs "$glob"); fi
+        done <<< "$FIX_HAS_TEST_GLOBS"
+
+        status=0
+        report=$(node "$GITHUB_ACTION_PATH/src/cli.ts" "${args[@]}") || status=$?
+        printf '%s\n' "$report"
+        if [ -n "$report" ] && [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+          printf '```text\n%s\n```\n' "$report" >> "$GITHUB_STEP_SUMMARY"
+        fi
+        exit "$status"
