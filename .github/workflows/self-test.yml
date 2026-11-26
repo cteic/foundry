@@ -1,0 +1,51 @@
+name: Workflow self-test
+
+# Calls the measurement workflows against this repo, so a change to one of them
+# runs before any other repo picks it up.
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+      - 'scripts/measure-dist-size.mjs'
+      - 'fixtures/lighthouse/**'
+  push:
+    branches: [dev]
+
+permissions:
+  contents: read
+
+jobs:
+  build-bench:
+    name: Build bench
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/build-bench.yml
+    with:
+      clean-paths: packages/*/dist packages/*/*.tsbuildinfo
+
+  # Also runs on a push to dev, to store the base measurement.
+  bundle-size:
+    name: Bundle size
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/bundle-size.yml
+    with:
+      build-dir: packages
+      measure-script: scripts/measure-dist-size.mjs
+
+  # The ceilings in the fixture config only prove the pass path. They are not
+  # budgets for any real page.
+  lighthouse:
+    name: Lighthouse
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/lighthouse.yml
+    with:
+      url: https://example.com
+      config: fixtures/lighthouse/lighthouserc.json

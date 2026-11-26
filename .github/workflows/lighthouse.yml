@@ -1,0 +1,240 @@
+name: Lighthouse
+
+# Page speed budget for a deployed preview. The caller passes the origin of the
+# preview. Lighthouse CI loads each path as many times as the caller's config
+# says, and the job fails when an assertion in that config fails. The budgets
+# live in the caller's config file, never here.
+
+on:
+  workflow_call:
+    inputs:
+      url:
+        description: Origin of the deployed preview. https only, with no path and no trailing slash.
+        type: string
+        required: true
+      paths:
+        description: Space-separated paths to test. Each starts with a slash.
+        type: string
+        default: /
+      config:
+        description: Lighthouse CI config file, relative to the repo root.
+        type: string
+        default: lighthouserc.json
+      lhci-version:
+        description: Exact version of @lhci/cli.
+        type: string
+        default: 0.16.1
+      node-version:
+        description: Node version for actions/setup-node.
+        type: string
+        default: '24'
+      report-name:
+        description: Name of the PR comment and prefix of the artifacts. Change it when one workflow calls this twice.
+        type: string
+        default: lighthouse
+      timeout-minutes:
+        description: Time limit for the Lighthouse job.
+        type: number
+        default: 15
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ inputs.report-name }}-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lighthouse:
+    name: Lighthouse
+    runs-on: ubuntu-24.04
+    timeout-minutes: ${{ inputs.timeout-minutes }}
+    permissions:
+      contents: read
+    outputs:
+      comment: ${{ steps.report.outputs.written }}
+    env:
+      PREVIEW_URL: ${{ inputs.url }}
+      PATHS: ${{ inputs.paths }}
+      CONFIG: ${{ inputs.config }}
+      LHCI_VERSION: ${{ inputs.lhci-version }}
+      REPORT_NAME: ${{ inputs.report-name }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check the inputs
+        run: |
+          set -euo pipefail
+          fail() {
+            echo "::error::$1"
+            exit 1
+          }
+          [[ "$PREVIEW_URL" =~ ^https://[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?(:[0-9]{1,5})?$ ]] ||
+            fail "url must be an https origin with no path, such as https://preview.example.com"
+          [ -n "$PATHS" ] || fail "paths is empty."
+          # Split on spaces only, with no glob expansion.
+          read -r -a paths <<< "$PATHS"
+          for path in "${paths[@]}"; do
+            [[ "$path" =~ ^/[A-Za-z0-9._~/%?\&=+-]*$ ]] || fail "paths has an entry that is not a URL path: $path"
+          done
+          [[ "$LHCI_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail "lhci-version must be an exact version, such as 0.16.1"
+          [[ "$REPORT_NAME" =~ ^[a-z0-9][a-z0-9-]{0,63}$ ]] ||
+            fail "report-name must be lower-case letters, digits and hyphens."
+          [[ "$CONFIG" != /* && "$CONFIG" != *..* ]] || fail "config must be a path inside the repo."
+          [ -f "$CONFIG" ] || fail "config file not found: $CONFIG"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      # A new preview can take a few seconds to answer.
+      - name: Wait for the preview
+        run: |
+          curl --fail --silent --show-error --output /dev/null \
+            --retry 10 --retry-delay 3 --retry-all-errors "$PREVIEW_URL/"
+
+      - name: Collect
+        run: |
+          set -euo pipefail
+          read -r -a paths <<< "$PATHS"
+          args=()
+          for path in "${paths[@]}"; do
+            args+=("--url=$PREVIEW_URL$path")
+          done
+          npx --yes "@lhci/cli@$LHCI_VERSION" collect --config="$CONFIG" "${args[@]}"
+
+      - name: Assert budgets
+        id: assert
+        run: npx --yes "@lhci/cli@$LHCI_VERSION" assert --config="$CONFIG"
+
+      - name: Save reports
+        if: ${{ !cancelled() }}
+        run: npx --yes "@lhci/cli@$LHCI_VERSION" upload --target=filesystem --outputDir="$RUNNER_TEMP/lighthouse-report"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: ${{ !cancelled() }}
+        with:
+          name: ${{ inputs.report-name }}-report
+          path: ${{ runner.temp }}/lighthouse-report
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Report
+        id: report
+        if: ${{ !cancelled() }}
+        env:
+          STATUS: ${{ steps.assert.outcome }}
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/lighthouse-report/manifest.json" ]; then
+            echo "No Lighthouse reports to summarise."
+            exit 0
+          fi
+          mkdir -p "$RUNNER_TEMP/comment"
+          REPORT_DIR="$RUNNER_TEMP/lighthouse-report" OUT="$RUNNER_TEMP/comment/comment.md" node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync } from 'node:fs';
+          import { join, basename } from 'node:path';
+
+          const METRICS = [
+            { id: 'largest-contentful-paint', label: 'LCP', format: (v) => `${Math.round(v)} ms` },
+            { id: 'total-blocking-time', label: 'TBT', format: (v) => `${Math.round(v)} ms` },
+            { id: 'cumulative-layout-shift', label: 'CLS', format: (v) => v.toFixed(3) },
+          ];
+
+          function median(values) {
+            const sorted = [...values].sort((a, b) => a - b);
+            const mid = Math.floor(sorted.length / 2);
+            return sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+          }
+
+          // Budgets are shown only for a JSON config. Any other format still
+          // gets its medians, and the assert step still decides pass or fail.
+          function readAssert() {
+            try {
+              return JSON.parse(readFileSync(process.env.CONFIG, 'utf8')).ci?.assert ?? {};
+            } catch {
+              return {};
+            }
+          }
+          const assert = readAssert();
+
+          function matches(pattern, url) {
+            try {
+              return new RegExp(pattern).test(url);
+            } catch {
+              return false;
+            }
+          }
+
+          function budgetFor(url, id) {
+            const matrix = Array.isArray(assert.assertMatrix) ? assert.assertMatrix : [];
+            const entry = matrix.find((m) => matches(m.matchingUrlPattern, url));
+            const assertion = (entry?.assertions ?? assert.assertions)?.[id];
+            const budget = Array.isArray(assertion) ? assertion[1]?.maxNumericValue : undefined;
+            return typeof budget === 'number' ? budget : null;
+          }
+
+          // The upload step writes one report per run, listed in manifest.json.
+          const dir = process.env.REPORT_DIR;
+          const manifest = JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8'));
+          const runsByUrl = new Map();
+          for (const entry of manifest) {
+            const lhr = JSON.parse(readFileSync(join(dir, basename(entry.jsonPath)), 'utf8'));
+            const runs = runsByUrl.get(entry.url) ?? [];
+            runs.push(lhr);
+            runsByUrl.set(entry.url, runs);
+          }
+
+          const lines = [
+            '| Page | Metric | Median | Budget | Status | Runs |',
+            '| --- | --- | ---: | ---: | :---: | ---: |',
+          ];
+          for (const [url, runs] of [...runsByUrl].sort(([a], [b]) => a.localeCompare(b))) {
+            const { pathname, search } = new URL(url);
+            const page = `${pathname}${search}`.replace(/[`|]/g, '');
+            for (const metric of METRICS) {
+              const values = runs
+                .map((lhr) => lhr.audits?.[metric.id]?.numericValue)
+                .filter((value) => typeof value === 'number');
+              if (values.length === 0) continue;
+              const value = median(values);
+              const budget = budgetFor(url, metric.id);
+              const status = budget !== null && value > budget ? 'FAIL' : 'PASS';
+              lines.push(
+                `| \`${page}\` | ${metric.label} | ${metric.format(value)} | ${budget === null ? 'none' : metric.format(budget)} | ${budget === null ? '' : status} | ${values.length} |`,
+              );
+            }
+          }
+
+          const verdict =
+            process.env.STATUS === 'success' ? 'Within budget.' : 'Over budget. The job fails.';
+          const body = [
+            '### Page speed',
+            '',
+            `${verdict} Lighthouse against ${process.env.PREVIEW_URL}.`,
+            '',
+            ...lines,
+            '',
+          ].join('\n');
+          writeFileSync(process.env.OUT, body);
+          NODE
+          cat "$RUNNER_TEMP/comment/comment.md" >> "$GITHUB_STEP_SUMMARY"
+          echo "written=true" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: ${{ !cancelled() && steps.report.outputs.written == 'true' }}
+        with:
+          name: ${{ inputs.report-name }}-comment
+          path: ${{ runner.temp }}/comment/comment.md
+          retention-days: 1
+
+  comment:
+    name: Comment
+    needs: lighthouse
+    if: ${{ !cancelled() && needs.lighthouse.outputs.comment == 'true' }}
+    permissions:
+      pull-requests: write
+    uses: ./.github/workflows/sticky-comment.yml
+    with:
+      marker: ${{ inputs.report-name }}
+      artifact: ${{ inputs.report-name }}-comment
