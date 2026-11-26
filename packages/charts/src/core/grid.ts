@@ -9,7 +9,7 @@ export interface GridLineData {
  * Generate grid line positions from tick data.
  */
 export function computeGridLines(ticks: TickData[], isHorizontal: boolean): GridLineData[] {
-  return ticks.map(tick => ({
+  return ticks.map((tick) => ({
     position: tick.position,
     isHorizontal,
   }));

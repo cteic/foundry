@@ -1,4 +1,4 @@
-import { computeAxisTicks, type TickData } from '../core/axis.js';
+import { computeAxisTicks } from '../core/axis.js';
 import { chartColors } from '../utils/color.js';
 
 export interface AxisProps {
@@ -19,7 +19,6 @@ export function Axis({
   position,
   tickCount = 5,
   formatTick,
-  length,
   color = chartColors.text,
 }: AxisProps) {
   const ticks = computeAxisTicks(domain, scale, tickCount, formatTick);
@@ -28,7 +27,7 @@ export function Axis({
     return (
       <g>
         {ticks.map((tick, i) => (
-          <g key={i} transform={`translate(${tick.position}, ${position})`}>
+          <g key={i} transform={`translate(${String(tick.position)}, ${String(position)})`}>
             <line y2={6} stroke={color} strokeWidth={1} />
             <text
               y={18}
@@ -48,7 +47,7 @@ export function Axis({
   return (
     <g>
       {ticks.map((tick, i) => (
-        <g key={i} transform={`translate(${position}, ${tick.position})`}>
+        <g key={i} transform={`translate(${String(position)}, ${String(tick.position)})`}>
           <line x2={-6} stroke={color} strokeWidth={1} />
           <text
             x={-10}

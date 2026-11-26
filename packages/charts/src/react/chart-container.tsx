@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, type ReactNode, type SVGAttributes } from 'react';
+import { useEffect, useRef, useState, type ReactNode, type SVGAttributes } from 'react';
 
 export interface ChartContainerProps extends Omit<SVGAttributes<SVGSVGElement>, 'viewBox'> {
   width?: number;
@@ -21,13 +21,15 @@ export function ChartContainer({
   useEffect(() => {
     if (!responsive || !containerRef.current) return;
 
-    const observer = new ResizeObserver(entries => {
+    const observer = new ResizeObserver((entries) => {
       const entry = entries[0];
       if (entry) setContainerWidth(entry.contentRect.width);
     });
 
     observer.observe(containerRef.current);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+    };
   }, [responsive]);
 
   const svgWidth = responsive ? containerWidth : width;
@@ -37,7 +39,7 @@ export function ChartContainer({
       <svg
         width={svgWidth}
         height={height}
-        viewBox={`0 0 ${svgWidth} ${height}`}
+        viewBox={`0 0 ${String(svgWidth)} ${String(height)}`}
         preserveAspectRatio="xMidYMid meet"
         {...props}
       >

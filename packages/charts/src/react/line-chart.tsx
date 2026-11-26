@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
-import type { DataPoint, ChartDimensions } from '../core/types.js';
-import { createLinearScale, computeDomainFromPoints } from '../core/scales.js';
+
 import { generateLinePath } from '../core/line.js';
+import { computeDomainFromPoints, createLinearScale } from '../core/scales.js';
+import type { ChartDimensions, DataPoint } from '../core/types.js';
 import { chartColors } from '../utils/color.js';
 import { ChartContainer } from './chart-container.js';
 

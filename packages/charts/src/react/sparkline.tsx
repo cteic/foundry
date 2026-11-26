@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+
 import { generateSparklinePath } from '../core/sparkline.js';
 import { chartColors } from '../utils/color.js';
 
@@ -32,7 +33,12 @@ export function Sparkline({
   if (!path) return null;
 
   return (
-    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className={className}>
+    <svg
+      width={width}
+      height={height}
+      viewBox={`0 0 ${String(width)} ${String(height)}`}
+      className={className}
+    >
       <path
         d={path}
         fill="none"

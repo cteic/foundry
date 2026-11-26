@@ -1,17 +1,17 @@
-import type { DepthOrder } from './types.js';
-import { moveTo, verticalTo, horizontalTo, closePath } from './paths.js';
 import { at } from '../utils/at.js';
+import { closePath, horizontalTo, moveTo, verticalTo } from './paths.js';
+import type { DepthOrder } from './types.js';
 
 /**
  * Generate a step-function area path for depth chart bids.
  * Bids go from right to left (highest price to lowest), cumulative amount increasing.
- * Matches Kraken's depth chart style — step functions, not curves.
+ * Matches Kraken's depth chart style: step functions, not curves.
  */
 export function generateBidPath(
   bids: DepthOrder[],
   scaleX: (v: number) => number,
   scaleY: (v: number) => number,
-  baseline: number,
+  baseline: number
 ): string {
   if (bids.length === 0) return '';
 
@@ -42,7 +42,7 @@ export function generateAskPath(
   asks: DepthOrder[],
   scaleX: (v: number) => number,
   scaleY: (v: number) => number,
-  baseline: number,
+  baseline: number
 ): string {
   if (asks.length === 0) return '';
 
@@ -72,7 +72,7 @@ export function generateDepthLinePath(
   orders: DepthOrder[],
   scaleX: (v: number) => number,
   scaleY: (v: number) => number,
-  ascending: boolean,
+  ascending: boolean
 ): string {
   if (orders.length === 0) return '';
 

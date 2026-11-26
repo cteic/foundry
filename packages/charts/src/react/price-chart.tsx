@@ -1,18 +1,19 @@
 import { useEffect, useId, useMemo, useRef, useState, type MouseEvent } from 'react';
-import type { DataPoint } from '../core/types.js';
-import { createLinearScale, computeDomainFromPoints } from '../core/scales.js';
-import { generateLinePath } from '../core/line.js';
+
 import { generateAreaPath } from '../core/area.js';
 import { computeAxisTicks } from '../core/axis.js';
+import { generateLinePath } from '../core/line.js';
+import { computeDomainFromPoints, createLinearScale } from '../core/scales.js';
 import { bisectNearest } from '../core/tooltip-math.js';
+import type { DataPoint } from '../core/types.js';
 import { chartColors } from '../utils/color.js';
 import { Axis } from './axis.js';
-import { Grid } from './grid.js';
 import { Crosshair } from './crosshair.js';
+import { Grid } from './grid.js';
 import { ChartTooltip } from './tooltip.js';
 
 export interface PriceChartProps {
-  /** Time-series points — `x` is a timestamp (ms), `y` is the price. */
+  /** Time-series points: `x` is a timestamp (ms), `y` is the price. */
   data: DataPoint[];
   height?: number;
   lineColor?: string;
@@ -30,7 +31,7 @@ const margin = { top: 16, right: 16, bottom: 28, left: 64 };
 const DEFAULT_WIDTH = 640;
 
 /**
- * A large, interactive price chart — axes, grid, gradient-filled area, and a
+ * A large, interactive price chart: axes, grid, gradient-filled area, and a
  * Kraken-style crosshair + tooltip that snaps to the nearest point on hover.
  * Width tracks its container (rendered 1:1 so hover maps cleanly to data).
  */
@@ -40,8 +41,8 @@ export function PriceChart({
   lineColor = chartColors.line,
   fillColor,
   interpolation = 'monotone',
-  formatValue = value => value.toLocaleString(),
-  formatTime = value => new Date(value).toLocaleDateString(),
+  formatValue = (value) => value.toLocaleString(),
+  formatTime = (value) => new Date(value).toLocaleDateString(),
   className,
 }: PriceChartProps) {
   const gradientId = useId();
@@ -54,12 +55,14 @@ export function PriceChart({
     const el = containerRef.current;
     if (!el) return;
 
-    const observer = new ResizeObserver(entries => {
+    const observer = new ResizeObserver((entries) => {
       const entry = entries[0];
       if (entry) setWidth(entry.contentRect.width);
     });
     observer.observe(el);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+    };
   }, []);
 
   const fill = fillColor ?? lineColor;
@@ -106,7 +109,9 @@ export function PriceChart({
     setHoverX(event.clientX - rect.left);
   };
 
-  const handleLeave = () => setHoverX(null);
+  const handleLeave = () => {
+    setHoverX(null);
+  };
 
   if (!geometry) {
     return <div ref={containerRef} className={className} style={{ width: '100%', height }} />;
@@ -125,7 +130,7 @@ export function PriceChart({
         ref={svgRef}
         width={width}
         height={height}
-        viewBox={`0 0 ${width} ${height}`}
+        viewBox={`0 0 ${String(width)} ${String(height)}`}
         onMouseMove={handleMove}
         onMouseLeave={handleLeave}
         style={{ display: 'block' }}

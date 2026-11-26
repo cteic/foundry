@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { generateAreaPath } from './area.js';
 import { generateAskPath, generateBidPath, generateDepthLinePath } from './depth-chart.js';
 import { linearLine, monotoneLine } from './line.js';
@@ -50,7 +51,7 @@ describe('monotoneLine', () => {
     expect(monotoneLine(steps, identity, identity)).toBe(
       'M0,0C0.3333333333333333,0,0.6666666666666667,0,1,0' +
         'C1.3333333333333333,0,1.6666666666666667,100,2,100' +
-        'C2.3333333333333335,100,2.6666666666666665,100,3,100',
+        'C2.3333333333333335,100,2.6666666666666665,100,3,100'
     );
   });
 
@@ -62,7 +63,7 @@ describe('monotoneLine', () => {
     ];
     expect(monotoneLine(climb, identity, identity)).toBe(
       'M0,0C0.3333333333333333,0.19611613513818404,0.6666666666666667,0.01941932430907989,1,1' +
-        'C1.3333333333333333,1.9805806756909201,1.6666666666666667,7,2,10',
+        'C1.3333333333333333,1.9805806756909201,1.6666666666666667,7,2,10'
     );
   });
 });
@@ -70,7 +71,7 @@ describe('monotoneLine', () => {
 describe('generateAreaPath', () => {
   it('closes the line down to the baseline and back to the first point', () => {
     expect(generateAreaPath(points, identity, identity, 100, 'monotone')).toBe(
-      `${monotonePath}V100H0Z`,
+      `${monotonePath}V100H0Z`
     );
   });
 });

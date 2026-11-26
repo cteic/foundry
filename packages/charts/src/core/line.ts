@@ -1,6 +1,6 @@
-import type { DataPoint } from './types.js';
-import { moveTo, lineTo, cubicBezier } from './paths.js';
 import { at } from '../utils/at.js';
+import { cubicBezier, lineTo, moveTo } from './paths.js';
+import type { DataPoint } from './types.js';
 
 /**
  * Generate a linear line path from data points.
@@ -8,7 +8,7 @@ import { at } from '../utils/at.js';
 export function linearLine(
   points: DataPoint[],
   scaleX: (v: number) => number,
-  scaleY: (v: number) => number,
+  scaleY: (v: number) => number
 ): string {
   if (points.length === 0) return '';
   const parts = [moveTo(scaleX(at(points, 0).x), scaleY(at(points, 0).y))];
@@ -20,21 +20,21 @@ export function linearLine(
 
 /**
  * Fritsch-Carlson monotone cubic Hermite interpolation.
- * Produces smooth curves that don't overshoot — important for financial data.
+ * Produces smooth curves that don't overshoot, important for financial data.
  * Inspired by Kraken's smooth line charts.
  */
 export function monotoneLine(
   points: DataPoint[],
   scaleX: (v: number) => number,
-  scaleY: (v: number) => number,
+  scaleY: (v: number) => number
 ): string {
   if (points.length === 0) return '';
   if (points.length === 1) return moveTo(scaleX(at(points, 0).x), scaleY(at(points, 0).y));
   if (points.length === 2) return linearLine(points, scaleX, scaleY);
 
   const n = points.length;
-  const xs = points.map(p => scaleX(p.x));
-  const ys = points.map(p => scaleY(p.y));
+  const xs = points.map((p) => scaleX(p.x));
+  const ys = points.map((p) => scaleY(p.y));
 
   // Compute slopes
   const deltas: number[] = [];
@@ -84,8 +84,8 @@ export function monotoneLine(
         at(xs, i + 1) - dx,
         at(ys, i + 1) - at(slopes, i + 1) * dx,
         at(xs, i + 1),
-        at(ys, i + 1),
-      ),
+        at(ys, i + 1)
+      )
     );
   }
 
@@ -99,7 +99,7 @@ export function generateLinePath(
   points: DataPoint[],
   scaleX: (v: number) => number,
   scaleY: (v: number) => number,
-  interpolation: 'linear' | 'monotone' = 'linear',
+  interpolation: 'linear' | 'monotone' = 'linear'
 ): string {
   return interpolation === 'monotone'
     ? monotoneLine(points, scaleX, scaleY)

@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { DepthOrder, ChartDimensions } from '../core/types.js';
-import { createLinearScale, computeDomain } from '../core/scales.js';
-import { generateBidPath, generateAskPath, generateDepthLinePath } from '../core/depth-chart.js';
+
+import { generateAskPath, generateBidPath, generateDepthLinePath } from '../core/depth-chart.js';
+import { computeDomain, createLinearScale } from '../core/scales.js';
+import type { ChartDimensions, DepthOrder } from '../core/types.js';
 import { chartColors } from '../utils/color.js';
 import { ChartContainer } from './chart-container.js';
 
@@ -34,17 +35,19 @@ export function DepthChart({
   const margin = { ...defaultMargin, ...dimensions?.margin };
 
   // Measure the real container width so the paths are computed at the same
-  // width the SVG is rendered at — otherwise the chart squashes to one side.
+  // width the SVG is rendered at; otherwise the chart squashes to one side.
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
     if (el.clientWidth > 0) setWidth(el.clientWidth);
-    const observer = new ResizeObserver(entries => {
+    const observer = new ResizeObserver((entries) => {
       const entry = entries[0];
       if (entry && entry.contentRect.width > 0) setWidth(entry.contentRect.width);
     });
     observer.observe(el);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+    };
   }, []);
 
   const { bidAreaPath, askAreaPath, bidLine, askLine, midPrice } = useMemo(() => {
@@ -52,8 +55,11 @@ export function DepthChart({
       return { bidAreaPath: '', askAreaPath: '', bidLine: '', askLine: '', midPrice: 0 };
     }
 
-    const allPrices = [...bids.map(o => o.price), ...asks.map(o => o.price)];
-    const allAmounts = [...bids.map(o => o.cumulativeAmount), ...asks.map(o => o.cumulativeAmount)];
+    const allPrices = [...bids.map((o) => o.price), ...asks.map((o) => o.price)];
+    const allAmounts = [
+      ...bids.map((o) => o.cumulativeAmount),
+      ...asks.map((o) => o.cumulativeAmount),
+    ];
 
     const priceDomain = computeDomain(allPrices, 0.02);
     const amountDomain: [number, number] = [0, Math.max(...allAmounts, 1)];
@@ -69,8 +75,8 @@ export function DepthChart({
 
     const baseline = height - margin.bottom;
 
-    const bestBid = bids.length > 0 ? Math.max(...bids.map(b => b.price)) : 0;
-    const bestAsk = asks.length > 0 ? Math.min(...asks.map(a => a.price)) : 0;
+    const bestBid = bids.length > 0 ? Math.max(...bids.map((b) => b.price)) : 0;
+    const bestAsk = asks.length > 0 ? Math.min(...asks.map((a) => a.price)) : 0;
     const mid = bestBid && bestAsk ? (bestBid + bestAsk) / 2 : bestBid || bestAsk;
 
     return {

@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { createLinearScale, computeDomain, niceTicks, niceNumber } from './scales.js';
+import { describe, expect, it } from 'vitest';
+
+import { computeDomain, createLinearScale, niceNumber, niceTicks } from './scales.js';
 
 describe('createLinearScale', () => {
   it('maps domain to range linearly', () => {

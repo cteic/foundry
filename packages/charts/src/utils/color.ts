@@ -1,5 +1,5 @@
 /**
- * Default chart colors — Kraken-inspired palette.
+ * Default chart colors: Kraken-inspired palette.
  */
 export const chartColors = {
   bid: '#00b275',

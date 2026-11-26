@@ -11,7 +11,7 @@ export interface CrosshairProps {
 }
 
 /**
- * Crosshair overlay — Kraken-style dashed lines that follow mouse position.
+ * Crosshair overlay: Kraken-style dashed lines that follow mouse position.
  */
 export function Crosshair({
   x,

@@ -1,7 +1,7 @@
-import type { DataPoint } from './types.js';
-import { generateLinePath } from './line.js';
-import { verticalTo, horizontalTo, closePath } from './paths.js';
 import { at } from '../utils/at.js';
+import { generateLinePath } from './line.js';
+import { closePath, horizontalTo, verticalTo } from './paths.js';
+import type { DataPoint } from './types.js';
 
 /**
  * Generate an area path (closed shape below the line).
@@ -12,7 +12,7 @@ export function generateAreaPath(
   scaleX: (v: number) => number,
   scaleY: (v: number) => number,
   baseline: number,
-  interpolation: 'linear' | 'monotone' = 'linear',
+  interpolation: 'linear' | 'monotone' = 'linear'
 ): string {
   if (points.length === 0) return '';
 

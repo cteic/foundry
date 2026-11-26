@@ -11,7 +11,7 @@ export function createLinearScale(config: ScaleConfig) {
   };
 }
 
-export function computeDomain(values: number[], padding: number = 0): [number, number] {
+export function computeDomain(values: number[], padding = 0): [number, number] {
   if (values.length === 0) return [0, 1];
   const min = Math.min(...values);
   const max = Math.max(...values);
@@ -24,10 +24,10 @@ export function computeDomainFromPoints(points: DataPoint[]): {
   yDomain: [number, number];
 } {
   return {
-    xDomain: computeDomain(points.map(p => p.x)),
+    xDomain: computeDomain(points.map((p) => p.x)),
     yDomain: computeDomain(
-      points.map(p => p.y),
-      0.05,
+      points.map((p) => p.y),
+      0.05
     ),
   };
 }
@@ -52,7 +52,7 @@ export function niceNumber(value: number, round: boolean): number {
   return nice * Math.pow(10, exponent);
 }
 
-export function niceTicks(min: number, max: number, count: number = 5): number[] {
+export function niceTicks(min: number, max: number, count = 5): number[] {
   const range = niceNumber(max - min, false);
   const step = niceNumber(range / (count - 1), true);
   const niceMin = Math.floor(min / step) * step;

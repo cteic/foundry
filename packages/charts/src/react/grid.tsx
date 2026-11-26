@@ -22,7 +22,7 @@ export function Grid({
     <g>
       {yTicks?.map((tick, i) => (
         <line
-          key={`h-${i}`}
+          key={`h-${String(i)}`}
           x1={margin.left}
           x2={width - margin.right}
           y1={tick.position}
@@ -33,7 +33,7 @@ export function Grid({
       ))}
       {xTicks?.map((tick, i) => (
         <line
-          key={`v-${i}`}
+          key={`v-${String(i)}`}
           x1={tick.position}
           x2={tick.position}
           y1={margin.top}

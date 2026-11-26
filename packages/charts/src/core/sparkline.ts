@@ -1,5 +1,5 @@
-import { createLinearScale, computeDomain } from './scales.js';
 import { monotoneLine } from './line.js';
+import { computeDomain, createLinearScale } from './scales.js';
 import type { DataPoint } from './types.js';
 
 /**
@@ -10,7 +10,7 @@ export function generateSparklinePath(
   values: number[],
   width: number,
   height: number,
-  padding: number = 2,
+  padding = 2
 ): string {
   if (values.length < 2) return '';
 

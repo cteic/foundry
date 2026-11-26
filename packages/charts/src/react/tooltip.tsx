@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+
 import { chartColors } from '../utils/color.js';
 
 export interface TooltipProps {

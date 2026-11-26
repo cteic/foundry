@@ -8,7 +8,7 @@
 export function at<T>(items: readonly T[], index: number): T {
   const item = items[index];
   if (item === undefined) {
-    throw new RangeError(`index ${index} is outside a list of ${items.length}`);
+    throw new RangeError(`index ${String(index)} is outside a list of ${String(items.length)}`);
   }
   return item;
 }

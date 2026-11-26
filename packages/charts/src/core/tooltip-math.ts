@@ -1,14 +1,14 @@
-import type { DataPoint } from './types.js';
 import { at } from '../utils/at.js';
+import type { DataPoint } from './types.js';
 
 /**
  * Find the nearest data point to a given x position using binary search.
- * Used for tooltip/crosshair positioning — like Kraken's hover behavior.
+ * Used for tooltip/crosshair positioning, like Kraken's hover behavior.
  */
 export function bisectNearest(
   points: DataPoint[],
   targetX: number,
-  scaleX: (v: number) => number,
+  scaleX: (v: number) => number
 ): { index: number; point: DataPoint } | null {
   if (points.length === 0) return null;
   if (points.length === 1) return { index: 0, point: at(points, 0) };

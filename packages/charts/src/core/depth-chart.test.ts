@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { generateBidPath, generateAskPath, generateDepthLinePath } from './depth-chart.js';
+import { describe, expect, it } from 'vitest';
+
+import { generateAskPath, generateBidPath, generateDepthLinePath } from './depth-chart.js';
 import type { DepthOrder } from './types.js';
 
 const identity = (v: number) => v;
