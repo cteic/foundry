@@ -1,0 +1,25 @@
+import { at } from '../utils/at.js';
+import { generateLinePath } from './line.js';
+import { closePath, horizontalTo, verticalTo } from './paths.js';
+import type { DataPoint } from './types.js';
+
+/**
+ * Generate an area path (closed shape below the line).
+ * The area extends from the line down to baseline (typically the chart bottom).
+ */
+export function generateAreaPath(
+  points: DataPoint[],
+  scaleX: (v: number) => number,
+  scaleY: (v: number) => number,
+  baseline: number,
+  interpolation: 'linear' | 'monotone' = 'linear'
+): string {
+  if (points.length === 0) return '';
+
+  const linePath = generateLinePath(points, scaleX, scaleY, interpolation);
+
+  // Close the path: go to bottom-right, then bottom-left, then close
+  const firstX = scaleX(at(points, 0).x);
+
+  return linePath + verticalTo(baseline) + horizontalTo(firstX) + closePath();
+}
