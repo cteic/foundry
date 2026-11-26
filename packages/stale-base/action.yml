@@ -1,0 +1,53 @@
+name: stale-base
+description: Fail a pull request whose branch is built on an old base.
+
+inputs:
+  base:
+    description: Ref the branch must be up to date with. Defaults to the pull request's base branch on origin.
+    default: ''
+  max-behind:
+    description: Most commits the branch may be behind the base. Empty uses the repo config, then 0.
+    default: ''
+  fetch:
+    description: Set to true to fetch the base's remote first.
+    default: 'false'
+  dry-run:
+    description: Set to true to report without failing the job.
+    default: 'false'
+  setup-node:
+    description: Set to false when the job already has Node 24 or later on the PATH.
+    default: 'true'
+
+runs:
+  using: composite
+  steps:
+    - if: inputs.setup-node == 'true'
+      uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      with:
+        node-version: '24'
+    - name: Check the branch against its base
+      shell: bash
+      env:
+        STALE_BASE_BASE: ${{ inputs.base }}
+        STALE_BASE_BASE_BRANCH: ${{ github.base_ref }}
+        STALE_BASE_MAX_BEHIND: ${{ inputs.max-behind }}
+        STALE_BASE_FETCH: ${{ inputs.fetch }}
+        STALE_BASE_DRY_RUN: ${{ inputs.dry-run }}
+      run: |
+        args=()
+        if [ -n "$STALE_BASE_BASE" ]; then
+          args+=(--base "$STALE_BASE_BASE")
+        elif [ -n "$STALE_BASE_BASE_BRANCH" ]; then
+          args+=(--base "origin/$STALE_BASE_BASE_BRANCH")
+        fi
+        if [ -n "$STALE_BASE_MAX_BEHIND" ]; then args+=(--max-behind "$STALE_BASE_MAX_BEHIND"); fi
+        if [ "$STALE_BASE_FETCH" = 'true' ]; then args+=(--fetch); fi
+        if [ "$STALE_BASE_DRY_RUN" = 'true' ]; then args+=(--dry-run); fi
+
+        status=0
+        report=$(node "$GITHUB_ACTION_PATH/src/cli.ts" "${args[@]}") || status=$?
+        printf '%s\n' "$report"
+        if [ -n "$report" ] && [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+          printf '```text\n%s\n```\n' "$report" >> "$GITHUB_STEP_SUMMARY"
+        fi
+        exit "$status"
