@@ -1,6 +1,6 @@
 {
   "name": "@cteic/charts",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Dependency-free SVG charts for cteic products: pure path maths plus optional React components",
   "license": "AGPL-3.0-only",
   "type": "module",
