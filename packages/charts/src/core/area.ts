@@ -1,6 +1,7 @@
 import type { DataPoint } from './types.js';
 import { generateLinePath } from './line.js';
-import { lineTo, verticalTo, horizontalTo, closePath } from './paths.js';
+import { verticalTo, horizontalTo, closePath } from './paths.js';
+import { at } from '../utils/at.js';
 
 /**
  * Generate an area path (closed shape below the line).
@@ -18,8 +19,7 @@ export function generateAreaPath(
   const linePath = generateLinePath(points, scaleX, scaleY, interpolation);
 
   // Close the path: go to bottom-right, then bottom-left, then close
-  const lastX = scaleX(points[points.length - 1].x);
-  const firstX = scaleX(points[0].x);
+  const firstX = scaleX(at(points, 0).x);
 
   return linePath + verticalTo(baseline) + horizontalTo(firstX) + closePath();
 }

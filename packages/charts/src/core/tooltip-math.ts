@@ -1,4 +1,5 @@
 import type { DataPoint } from './types.js';
+import { at } from '../utils/at.js';
 
 /**
  * Find the nearest data point to a given x position using binary search.
@@ -10,7 +11,7 @@ export function bisectNearest(
   scaleX: (v: number) => number,
 ): { index: number; point: DataPoint } | null {
   if (points.length === 0) return null;
-  if (points.length === 1) return { index: 0, point: points[0] };
+  if (points.length === 1) return { index: 0, point: at(points, 0) };
 
   const scaledTarget = targetX;
   let lo = 0;
@@ -18,7 +19,7 @@ export function bisectNearest(
 
   while (lo < hi) {
     const mid = (lo + hi) >> 1;
-    if (scaleX(points[mid].x) < scaledTarget) {
+    if (scaleX(at(points, mid).x) < scaledTarget) {
       lo = mid + 1;
     } else {
       hi = mid;
@@ -27,12 +28,12 @@ export function bisectNearest(
 
   // Compare lo and lo-1 to find nearest
   if (lo > 0) {
-    const dLeft = Math.abs(scaleX(points[lo - 1].x) - scaledTarget);
-    const dRight = Math.abs(scaleX(points[lo].x) - scaledTarget);
+    const dLeft = Math.abs(scaleX(at(points, lo - 1).x) - scaledTarget);
+    const dRight = Math.abs(scaleX(at(points, lo).x) - scaledTarget);
     if (dLeft < dRight) {
-      return { index: lo - 1, point: points[lo - 1] };
+      return { index: lo - 1, point: at(points, lo - 1) };
     }
   }
 
-  return { index: lo, point: points[lo] };
+  return { index: lo, point: at(points, lo) };
 }

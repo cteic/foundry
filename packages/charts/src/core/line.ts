@@ -1,5 +1,6 @@
 import type { DataPoint } from './types.js';
 import { moveTo, lineTo, cubicBezier } from './paths.js';
+import { at } from '../utils/at.js';
 
 /**
  * Generate a linear line path from data points.
@@ -10,9 +11,9 @@ export function linearLine(
   scaleY: (v: number) => number,
 ): string {
   if (points.length === 0) return '';
-  const parts = [moveTo(scaleX(points[0].x), scaleY(points[0].y))];
+  const parts = [moveTo(scaleX(at(points, 0).x), scaleY(at(points, 0).y))];
   for (let i = 1; i < points.length; i++) {
-    parts.push(lineTo(scaleX(points[i].x), scaleY(points[i].y)));
+    parts.push(lineTo(scaleX(at(points, i).x), scaleY(at(points, i).y)));
   }
   return parts.join('');
 }
@@ -28,7 +29,7 @@ export function monotoneLine(
   scaleY: (v: number) => number,
 ): string {
   if (points.length === 0) return '';
-  if (points.length === 1) return moveTo(scaleX(points[0].x), scaleY(points[0].y));
+  if (points.length === 1) return moveTo(scaleX(at(points, 0).x), scaleY(at(points, 0).y));
   if (points.length === 2) return linearLine(points, scaleX, scaleY);
 
   const n = points.length;
@@ -40,50 +41,50 @@ export function monotoneLine(
   const slopes: number[] = [];
 
   for (let i = 0; i < n - 1; i++) {
-    const dx = xs[i + 1] - xs[i];
-    const dy = ys[i + 1] - ys[i];
+    const dx = at(xs, i + 1) - at(xs, i);
+    const dy = at(ys, i + 1) - at(ys, i);
     deltas.push(dx === 0 ? 0 : dy / dx);
   }
 
-  slopes.push(deltas[0]);
+  slopes.push(at(deltas, 0));
   for (let i = 1; i < n - 1; i++) {
-    if (deltas[i - 1] * deltas[i] <= 0) {
+    if (at(deltas, i - 1) * at(deltas, i) <= 0) {
       slopes.push(0);
     } else {
-      slopes.push((deltas[i - 1] + deltas[i]) / 2);
+      slopes.push((at(deltas, i - 1) + at(deltas, i)) / 2);
     }
   }
-  slopes.push(deltas[n - 2]);
+  slopes.push(at(deltas, n - 2));
 
   // Fritsch-Carlson monotonicity constraints
   for (let i = 0; i < n - 1; i++) {
-    if (Math.abs(deltas[i]) < 1e-12) {
+    if (Math.abs(at(deltas, i)) < 1e-12) {
       slopes[i] = 0;
       slopes[i + 1] = 0;
     } else {
-      const alpha = slopes[i] / deltas[i];
-      const beta = slopes[i + 1] / deltas[i];
+      const alpha = at(slopes, i) / at(deltas, i);
+      const beta = at(slopes, i + 1) / at(deltas, i);
       const tau = alpha * alpha + beta * beta;
       if (tau > 9) {
         const s = 3 / Math.sqrt(tau);
-        slopes[i] = s * alpha * deltas[i];
-        slopes[i + 1] = s * beta * deltas[i];
+        slopes[i] = s * alpha * at(deltas, i);
+        slopes[i + 1] = s * beta * at(deltas, i);
       }
     }
   }
 
   // Build path
-  const parts = [moveTo(xs[0], ys[0])];
+  const parts = [moveTo(at(xs, 0), at(ys, 0))];
   for (let i = 0; i < n - 1; i++) {
-    const dx = (xs[i + 1] - xs[i]) / 3;
+    const dx = (at(xs, i + 1) - at(xs, i)) / 3;
     parts.push(
       cubicBezier(
-        xs[i] + dx,
-        ys[i] + slopes[i] * dx,
-        xs[i + 1] - dx,
-        ys[i + 1] - slopes[i + 1] * dx,
-        xs[i + 1],
-        ys[i + 1],
+        at(xs, i) + dx,
+        at(ys, i) + at(slopes, i) * dx,
+        at(xs, i + 1) - dx,
+        at(ys, i + 1) - at(slopes, i + 1) * dx,
+        at(xs, i + 1),
+        at(ys, i + 1),
       ),
     );
   }

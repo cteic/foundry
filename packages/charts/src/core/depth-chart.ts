@@ -1,5 +1,6 @@
 import type { DepthOrder } from './types.js';
-import { moveTo, lineTo, verticalTo, horizontalTo, closePath } from './paths.js';
+import { moveTo, verticalTo, horizontalTo, closePath } from './paths.js';
+import { at } from '../utils/at.js';
 
 /**
  * Generate a step-function area path for depth chart bids.
@@ -17,7 +18,7 @@ export function generateBidPath(
   // Bids sorted by price descending (highest first)
   const sorted = [...bids].sort((a, b) => b.price - a.price);
 
-  const parts = [moveTo(scaleX(sorted[0].price), baseline)];
+  const parts = [moveTo(scaleX(at(sorted, 0).price), baseline)];
 
   for (const order of sorted) {
     const x = scaleX(order.price);
@@ -48,7 +49,7 @@ export function generateAskPath(
   // Asks sorted by price ascending (lowest first)
   const sorted = [...asks].sort((a, b) => a.price - b.price);
 
-  const parts = [moveTo(scaleX(sorted[0].price), baseline)];
+  const parts = [moveTo(scaleX(at(sorted, 0).price), baseline)];
 
   for (const order of sorted) {
     const x = scaleX(order.price);
@@ -79,12 +80,11 @@ export function generateDepthLinePath(
     ? [...orders].sort((a, b) => a.price - b.price)
     : [...orders].sort((a, b) => b.price - a.price);
 
-  const parts = [moveTo(scaleX(sorted[0].price), scaleY(sorted[0].cumulativeAmount))];
+  const parts = [moveTo(scaleX(at(sorted, 0).price), scaleY(at(sorted, 0).cumulativeAmount))];
 
   for (let i = 1; i < sorted.length; i++) {
-    const prevX = scaleX(sorted[i - 1].price);
-    const currX = scaleX(sorted[i].price);
-    const currY = scaleY(sorted[i].cumulativeAmount);
+    const currX = scaleX(at(sorted, i).price);
+    const currY = scaleY(at(sorted, i).cumulativeAmount);
     // Step: horizontal then vertical
     parts.push(horizontalTo(currX));
     parts.push(verticalTo(currY));

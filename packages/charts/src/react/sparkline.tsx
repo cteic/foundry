@@ -19,9 +19,13 @@ export function Sparkline({
   strokeWidth = 1.5,
   className,
 }: SparklineProps) {
+  const first = data[0];
+  const last = data.at(-1);
   const resolvedColor =
     color ??
-    (data.length >= 2 && data[data.length - 1] >= data[0] ? chartColors.bid : chartColors.ask);
+    (data.length >= 2 && first !== undefined && last !== undefined && last >= first
+      ? chartColors.bid
+      : chartColors.ask);
 
   const path = useMemo(() => generateSparklinePath(data, width, height), [data, width, height]);
 
