@@ -176,6 +176,10 @@ jobs:
 
 The calling job needs `contents: read` and `pull-requests: write`. No secret is needed. Set a budget only from a measured baseline: the median of at least five runs, with the machine and the command recorded. [docs/measurement.md](docs/measurement.md) has the caller snippet, the inputs and the script contract for each workflow.
 
+## Working with coding agents
+
+[docs/working-with-agents.md](docs/working-with-agents.md) teaches the habits for working with coding agents: twelve rules, each with a real case from a cteic repo and an exercise, plus a repo setup checklist and a 90-minute team session. The rules agents themselves follow live in [agents/](agents/README.md).
+
 ## Release
 
 1. Add a changeset with your change: `pnpm changeset`. CI fails a PR that changes a package without one. For a change that ships nothing, such as a test, add an empty one: `pnpm changeset --empty`. Renovate PRs are exempt, so their bumps ship with the next release.
