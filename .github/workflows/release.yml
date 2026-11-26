@@ -30,6 +30,8 @@ jobs:
           node-version-file: .node-version
           package-manager-cache: false
       - run: pnpm install --frozen-lockfile
+      - name: Build the presets that format the changelogs
+        run: pnpm build
       - name: Set git identity
         run: |
           git config user.name "Pete Watters"
