@@ -1,10 +1,10 @@
 ---
-'@cteic/tsconfig': minor
-'@cteic/eslint-config': minor
-'@cteic/prettier-config': minor
-'@cteic/vitest-config': minor
-'@cteic/playwright-config': minor
-'@cteic/commitlint-config': minor
+'@cteic/tsconfig': major
+'@cteic/eslint-config': major
+'@cteic/prettier-config': major
+'@cteic/vitest-config': major
+'@cteic/playwright-config': major
+'@cteic/commitlint-config': major
 ---
 
 First release of the shared config packages.
