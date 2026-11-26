@@ -1,5 +1,6 @@
 import { execFile } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
@@ -13,6 +14,34 @@ import { describe, expect, it } from 'vitest';
 const fixtureDir = fileURLToPath(new URL('.', import.meta.url));
 const samplePath = join(fixtureDir, 'src/sample.ts');
 const run = promisify(execFile);
+const prettierCli = fileURLToPath(import.meta.resolve('prettier/bin/prettier.cjs'));
+const sharedIgnore = 'node_modules/@cteic/prettier-config/prettierignore';
+
+async function prettierCheck(cwd: string): Promise<{ code: number; output: string }> {
+  const args = [
+    prettierCli,
+    '--check',
+    '.',
+    '--ignore-path',
+    sharedIgnore,
+    '--ignore-path',
+    '.prettierignore',
+  ];
+  try {
+    const { stdout, stderr } = await run(process.execPath, args, { cwd });
+    return { code: 0, output: stdout + stderr };
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && 'stdout' in error && 'stderr' in error) {
+      const { code, stdout, stderr } = error;
+      return {
+        code: typeof code === 'number' ? code : 1,
+        output:
+          (typeof stdout === 'string' ? stdout : '') + (typeof stderr === 'string' ? stderr : ''),
+      };
+    }
+    throw error;
+  }
+}
 
 describe('minimal consumer', () => {
   it('@cteic/tsconfig: compiles with the strict base', () => {
@@ -53,6 +82,45 @@ describe('minimal consumer', () => {
 
     expect(options).toMatchObject({ singleQuote: true, printWidth: 100 });
     expect(await check(source, { ...options, filepath: samplePath })).toBe(true);
+  });
+
+  it('@cteic/prettier-config: ships prettierignore at the documented node_modules path', async () => {
+    const contents = await readFile(join(fixtureDir, sharedIgnore), 'utf8');
+
+    expect(contents).toContain('pnpm-lock.yaml');
+    expect(contents).toContain('package-lock.json');
+    expect(contents).toContain('yarn.lock');
+  });
+
+  it('@cteic/prettier-config: --ignore-path keeps the formatter off lockfiles', async () => {
+    const repo = await mkdtemp(join(tmpdir(), 'cteic-lockfile-ignore-'));
+    await mkdir(join(repo, 'node_modules/@cteic/prettier-config'), { recursive: true });
+    await writeFile(
+      join(repo, sharedIgnore),
+      await readFile(join(fixtureDir, sharedIgnore), 'utf8')
+    );
+    // pnpm's native inline form. Prettier would expand it and flip the quotes.
+    await writeFile(
+      join(repo, 'pnpm-lock.yaml'),
+      "lockfileVersion: '9.0'\n\npackages:\n\n  left-pad@1.3.0:\n    resolution: {integrity: sha512-XI5MPzVNApjAyhQzphX8BkmKsKUxD4LdyK24iZeQGinBN9yTQT3bFlCBy/aVx2HrNcqQGsdot8ghrjyrvMCoEg==}\n"
+    );
+    await writeFile(join(repo, 'yarn.lock'), '{"a":    1}\n');
+    await writeFile(join(repo, 'generated.json'), '{"b":    2}\n');
+    await writeFile(join(repo, '.prettierignore'), 'generated.json\n');
+    await writeFile(join(repo, 'clean.ts'), 'const a = 1;\n');
+
+    const ignored = await prettierCheck(repo);
+
+    expect(ignored.output).not.toContain('pnpm-lock.yaml');
+    expect(ignored.code).toBe(0);
+
+    // The same invocation must still fail on a file nobody ignored.
+    await writeFile(join(repo, 'messy.ts'), 'const b   =    2\n');
+    const caught = await prettierCheck(repo);
+
+    expect(caught.code).not.toBe(0);
+    expect(caught.output).toContain('messy.ts');
+    expect(caught.output).not.toContain('pnpm-lock.yaml');
   });
 
   it('@cteic/vitest-config: loads with the coverage floor', async () => {

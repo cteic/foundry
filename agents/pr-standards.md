@@ -31,6 +31,36 @@ git diff --stat "$base"..HEAD | tail -1
 
 Do not count generated files: `*.lock`, `dist/`, snapshots. Count the diff a human reviews.
 
+### A huge lockfile diff is formatting churn, not a dependency change
+
+A three-package bump does not produce a 10,000-line lockfile diff. That size means a formatter and the package manager are fighting over the file. Prettier expands pnpm's inline `resolution: {integrity: sha512-...}` blocks across several lines and flips quoted keys to double quotes; the next `pnpm install` rewrites them inline. Whichever ran last wins.
+
+Do not read the diff to tell them apart. Count what a dependency change would alter, on both sides:
+
+```sh
+base=$(git merge-base HEAD "origin/${BASE:-dev}")
+for ref in "$base" HEAD; do
+  git show "$ref:pnpm-lock.yaml" > "/tmp/lock-$ref.yaml"
+  echo "$ref  packages=$(awk '/^packages:/{f=1;next} /^[a-z]/{f=0} f && /^  [^ ]/' "/tmp/lock-$ref.yaml" | grep -c ':')" \
+       "snapshots=$(awk '/^snapshots:/{f=1;next} /^[a-z]/{f=0} f && /^  [^ ]/' "/tmp/lock-$ref.yaml" | grep -c ':')" \
+       "integrity=$(grep -c 'integrity: sha' "/tmp/lock-$ref.yaml")"
+done
+```
+
+| Counts before and after | Verdict                                                                    |
+| ----------------------- | -------------------------------------------------------------------------- |
+| Identical               | Formatting churn. Nothing was added, dropped or re-resolved. Fix the cause |
+| Differ by a few         | A real dependency change of that size. Review it                           |
+| Differ by hundreds      | A real re-resolution. Expected after a lockfile version or registry change |
+
+Fix the cause, do not re-run the formatter. Add the shared ignore list to the repo's format scripts, then run the install once so the package manager rewrites the lockfile in its native form, and commit both together:
+
+```sh
+prettier --check . --ignore-path node_modules/@cteic/prettier-config/prettierignore --ignore-path .prettierignore
+```
+
+Pass both `--ignore-path` flags. Prettier reads `.prettierignore` automatically only while no `--ignore-path` is given. See the `@cteic/prettier-config` section of foundry's README.
+
 If the PR is too large, propose a split and confirm it with Pete before you open anything. Group by concern: refactor, feature, test, config. Open the prep or refactor PR first. Merge small PRs fast so the base does not move under you.
 
 ### Worked example: splitting an oversized PR

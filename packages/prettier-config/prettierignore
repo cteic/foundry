@@ -1,0 +1,33 @@
+# Generator-owned files. A formatter must never rewrite these.
+#
+# A lockfile has exactly one owner: the package manager. Point a formatter at
+# it and the two fight, with whichever ran last winning. Prettier expands
+# pnpm's inline `resolution: {integrity: sha512-...}` blocks across several
+# lines and flips every quoted key to double quotes; pnpm rewrites them inline
+# on the next install. The result is thousands of lines of churn that hide the
+# real dependency change inside it.
+#
+# Pass this file to Prettier with `--ignore-path`, alongside the repo's own
+# `.prettierignore`. See the `@cteic/prettier-config` section of foundry's
+# README for the exact script lines.
+#
+# Patterns resolve against the directory Prettier runs in, not this file's
+# directory, and a pattern with no slash matches at any depth. So these cover
+# nested workspace packages as well as the repo root.
+#
+# Build output (dist/, coverage/, .next/) is deliberately not here. It varies
+# per repo and belongs in that repo's own .prettierignore, which composes with
+# this file through a second --ignore-path.
+
+# Node package managers
+pnpm-lock.yaml
+package-lock.json
+npm-shrinkwrap.json
+yarn.lock
+bun.lock
+bun.lockb
+deno.lock
+
+# Every other lockfile: Cargo.lock, composer.lock, flake.lock, poetry.lock,
+# uv.lock, Gemfile.lock. Prettier parses the JSON ones, so naming them matters.
+*.lock
