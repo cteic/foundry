@@ -29,14 +29,26 @@ jobs:
         with:
           node-version-file: .node-version
           package-manager-cache: false
-      - run: pnpm install --frozen-lockfile
+      - name: Check for pending changesets
+        id: pending
+        run: |
+          if find .changeset -maxdepth 1 -name '*.md' ! -name README.md | grep -q .; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.pending.outputs.found == 'true'
+        run: pnpm install --frozen-lockfile
       - name: Build the presets that format the changelogs
+        if: steps.pending.outputs.found == 'true'
         run: pnpm build
       - name: Set git identity
+        if: steps.pending.outputs.found == 'true'
         run: |
           git config user.name "Pete Watters"
           git config user.email "2938440+pete-watters@users.noreply.github.com"
-      - uses: changesets/action/version@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
+      - if: steps.pending.outputs.found == 'true'
+        uses: changesets/action/version@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
         with:
           script: pnpm exec changeset version
           commit-message: 'chore: version packages'
