@@ -88,6 +88,20 @@ describe('minimal consumer', () => {
     expect(typeof react.Sparkline).toBe('function');
   });
 
+  it('@cteic/posthog: every entry point loads without either SDK installed', async () => {
+    const core = await import('@cteic/posthog');
+    const web = await import('@cteic/posthog/web');
+    const native = await import('@cteic/posthog/react-native');
+
+    expect(core.sanitizePath('/rivals/12345?tab=h2h')).toBe('/rivals/:id');
+    expect(web.webOptions({ api_host: core.posthogHosts.eu })).toMatchObject({
+      autocapture: false,
+    });
+    expect(native.nativeOptions({ host: core.posthogHosts.us })).toMatchObject({
+      enableSessionReplay: false,
+    });
+  });
+
   it('@cteic/commitlint-config: enforces the consumer scopes', async () => {
     const loaded = await load({}, { cwd: fixtureDir });
     const parserOpts = loaded.parserPreset?.parserOpts;

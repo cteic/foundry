@@ -39,4 +39,10 @@ The npm docs also say the first successful publish must happen within 2 days of 
 - `@cteic/vitest-config`
 - `@cteic/playwright-config`
 - `@cteic/commitlint-config`
+- `@cteic/pr-clean`
+- `@cteic/pr-size`
+- `@cteic/stale-base`
+- `@cteic/fix-has-test`
+- `@cteic/validate`
 - `@cteic/charts`
+- `@cteic/posthog`
