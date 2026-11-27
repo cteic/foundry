@@ -1,0 +1,99 @@
+name: PR clean
+
+# Fails a pull request whose commits or text credit a coding tool: an author or
+# committer not on the allowed list, co-author trailers, credit lines, tool
+# session links and em dashes. It also fails when the repo's
+# .claude/settings.json does not turn off coding tool credit. It reads the
+# commits since the PR base and the PR body, so callers also run it when the
+# body is edited.
+
+on:
+  workflow_call:
+    inputs:
+      allow-authors:
+        description: Extra allowed "Name <email>" identities, one per line. They add to the foundry defaults.
+        type: string
+        default: ''
+      claude-settings:
+        description: Fail when .claude/settings.json does not match the foundry baseline in claude/settings.json.
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  pr-clean:
+    name: PR clean
+    # Bot PRs (Dependabot, Renovate, release bots) name tools in their bodies by
+    # design. A dev to main release PR only carries commits this job already
+    # checked on their way into dev.
+    if: >-
+      github.event.pull_request.user.type != 'Bot' &&
+      !(github.event.pull_request.head.ref == 'dev' && github.event.pull_request.base.ref == 'main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    concurrency:
+      group: pr-clean-${{ github.repository }}-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    steps:
+      # The PR head, not the merge commit GitHub creates: that commit's
+      # committer is not on the allowed list. Full history so the base exists.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: repo
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Find the foundry commit that holds this workflow
+        env:
+          WORKFLOW_REPOSITORY: ${{ job.workflow_repository }}
+          WORKFLOW_SHA: ${{ job.workflow_sha }}
+        run: |
+          if [[ -z "$WORKFLOW_REPOSITORY" || -z "$WORKFLOW_SHA" ]]; then
+            echo "::error::job.workflow_repository or job.workflow_sha is empty, so the matching pr-clean cannot be checked out."
+            exit 1
+          fi
+          echo "pr-clean from $WORKFLOW_REPOSITORY@$WORKFLOW_SHA"
+      # pr-clean from the same foundry commit as this workflow, so a caller
+      # pinned to a SHA always runs the matching rules. It uses only Node
+      # built-ins and Node 24 runs its TypeScript source, so nothing installs.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: foundry
+          sparse-checkout: packages/pr-clean
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+      - name: Check the commits, the PR text and the Claude settings
+        working-directory: repo
+        env:
+          # Passed through the environment, never inlined into the script.
+          PR_BODY: ${{ github.event.pull_request.body }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          EXTRA_AUTHORS: ${{ inputs.allow-authors }}
+          CLAUDE_SETTINGS: ${{ inputs.claude-settings }}
+          DEFAULT_AUTHORS: |-
+            Pete Watters <2938440+pete-watters@users.noreply.github.com>
+            Peter Watters <2938440+pete-watters@users.noreply.github.com>
+            GitHub <noreply@github.com>
+            dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+            renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>
+            github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+        run: |
+          printf '%s\n' "$PR_BODY" > "$RUNNER_TEMP/pr-body.md"
+          args=(--base "origin/$BASE_REF" --pr-body-file "$RUNNER_TEMP/pr-body.md")
+          while IFS= read -r author; do
+            if [[ -n "${author//[[:space:]]/}" ]]; then
+              args+=(--allow-author "$author")
+            fi
+          done <<< "$DEFAULT_AUTHORS"$'\n'"$EXTRA_AUTHORS"
+          if [[ "$CLAUDE_SETTINGS" == 'true' ]]; then
+            args+=(--claude-settings)
+          fi
+          node "$GITHUB_WORKSPACE/foundry/packages/pr-clean/src/cli.ts" "${args[@]}"
