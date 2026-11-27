@@ -34,6 +34,8 @@ Every command except `pnpm changeset` builds first, because the root configs loa
 3. Add a `[file, ruleId]` row to the `it.each` table in `packages/eslint-config/src/index.test.ts`.
 4. Run `pnpm test`, then `pnpm changeset` and choose a bump for `@cteic/eslint-config`.
 
+React rules live in `packages/eslint-config/src/react.ts`, exported as `@cteic/eslint-config/react`. Their fixtures go in `src/fixtures/react/<rule-name>.tsx` and their rows in `src/react.test.ts`.
+
 A consumer that sets its own `no-restricted-syntax` replaces the `enum` ban, so it must repeat the `TSEnumDeclaration` entry from `bannedRules`.
 
 ## Settings
