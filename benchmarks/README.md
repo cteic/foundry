@@ -26,45 +26,51 @@ Range is the fastest and slowest run. A change smaller than the range of either 
 
 634 TypeScript files, 83901 lines at the baseline. Machine: Apple M2 Max, 12 cores.
 
-| Step | baseline (2026-11-27) | Range |
-| --- | ---: | ---: |
-| `format:check` | 10.1 s | 9.9-11.0 s |
-| `lint` | 6.5 s | 5.8-6.8 s |
-| `typecheck` | 6.6 s | 5.0-7.0 s |
-| `test` | 14.9 s | 14.6-16.8 s |
-| `build` | 28.4 s | 28.1-29.3 s |
+| Step | baseline (2026-11-27) | Range | react-compiler (2026-11-27) | Range | Change |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `format:check` | 10.1 s | 9.9-11.0 s | 10.4 s | 10.3-10.7 s | +0.2 s (+2%), within noise |
+| `lint` | 6.5 s | 5.8-6.8 s | 5.4 s | 5.4-5.5 s | -1.1 s (-17%) |
+| `typecheck` | 6.6 s | 5.0-7.0 s | 5.3 s | 5.3-5.4 s | -1.3 s (-19%), within noise |
+| `test` | 14.9 s | 14.6-16.8 s | 10.7 s (failed) | 10.6-11.0 s |  |
+| `build` | 28.4 s | 28.1-29.3 s | 29.6 s | 29.3-30.1 s | +1.1 s (+4%), within noise |
 
 | Run | Date | Commit | Tools |
 | --- | --- | --- | --- |
 | baseline | 2026-11-27 | `8ca8443` | eslint 9.39.4, 9.39.5; next 16.4.6; prettier 3.8.3; turbo 2.9.14; typescript 5.9.3; vitest 3.2.6, 3.2.7 |
+| react-compiler-base | 2026-11-27 | `503f204` | eslint 9.39.4, 9.39.5; next 16.4.6; prettier 3.8.3; turbo 2.9.14; typescript 5.9.3; vitest 3.2.6, 3.2.7 |
+| react-compiler | 2026-11-27 | `b2ba146` | eslint 9.39.4, 9.39.5; next 16.4.6; prettier 3.8.3; turbo 2.9.14; typescript 5.9.3; vitest 3.2.6, 3.2.7 |
 
 ## stackr
 
 506 TypeScript files, 44345 lines at the baseline. Machine: Apple M2 Max, 12 cores.
 
-| Step | baseline (2026-11-27) | Range |
-| --- | ---: | ---: |
-| `format:check` | 2.9 s | 2.9-8.1 s |
-| `lint` | 8.5 s | 8.2-9.1 s |
-| `typecheck` | 14.6 s | 12.5-17.0 s |
-| `build` | 24.1 s | 20.4-29.1 s |
+| Step | baseline (2026-11-27) | Range | react-compiler (2026-11-27) | Range | Change |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `format:check` | 2.9 s | 2.9-8.1 s | 2.6 s | 2.6-2.6 s | -0.3 s (-11%), within noise |
+| `lint` | 8.5 s | 8.2-9.1 s | 8.4 s | 8.3-8.4 s | -0.2 s (-2%), within noise |
+| `typecheck` | 14.6 s | 12.5-17.0 s | 12.7 s | 12.6-12.9 s | -1.9 s (-13%), within noise |
+| `build` | 24.1 s | 20.4-29.1 s | 19.9 s | 19.8-20.2 s | -4.2 s (-17%), within noise |
 
 | Run | Date | Commit | Tools |
 | --- | --- | --- | --- |
 | baseline | 2026-11-27 | `8d53cab` | eslint 9.39.3; next 16.4.6; prettier 3.8.1; turbo 2.8.12; typescript 5.9.3; typescript-eslint 8.56.1; vitest 3.2.6 |
+| react-compiler-base | 2026-11-27 | `b531fd4` | eslint 9.39.3; next 16.4.6; prettier 3.8.1; turbo 2.8.12; typescript 5.9.3; typescript-eslint 8.56.1; vitest 3.2.6 |
+| react-compiler | 2026-11-27 | `f931ba1` | eslint 9.39.3; next 16.4.6; prettier 3.8.1; turbo 2.8.12; typescript 5.9.3; typescript-eslint 8.56.1; vitest 3.2.6 |
 
 ## tonnta
 
 246 TypeScript files, 27290 lines at the baseline. Machine: Apple M2 Max, 12 cores.
 
-| Step | baseline (2026-11-27) | Range |
-| --- | ---: | ---: |
-| `format:check` | 3.3 s | 3.3-3.8 s |
-| `lint` | 7.2 s | 6.5-15.7 s |
-| `typecheck` | 4.6 s | 4.1-7.3 s |
-| `test` | 11.3 s | 10.4-12.0 s |
-| `build` | 25.7 s | 23.1-33.0 s |
+| Step | baseline (2026-11-27) | Range | react-compiler (2026-11-27) | Range | Change |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `format:check` | 3.3 s | 3.3-3.8 s | 3.5 s | 3.5-3.6 s | +0.2 s (+7%), within noise |
+| `lint` | 7.2 s | 6.5-15.7 s | 5.5 s | 5.4-5.6 s | -1.7 s (-23%), within noise |
+| `typecheck` | 4.6 s | 4.1-7.3 s | 4.0 s | 4.0-4.1 s | -0.5 s (-11%), within noise |
+| `test` | 11.3 s | 10.4-12.0 s | 8.2 s | 8.2-8.4 s | -3.1 s (-27%) |
+| `build` | 25.7 s | 23.1-33.0 s | 20.2 s | 19.9-20.7 s | -5.5 s (-22%), within noise |
 
 | Run | Date | Commit | Tools |
 | --- | --- | --- | --- |
 | baseline | 2026-11-27 | `26a88d8` | eslint 9.39.4; next 16.4.6; prettier 3.9.4; turbo 2.10.2; typescript 5.9.3; vitest 3.2.6 |
+| react-compiler-base | 2026-11-27 | `98b6499` | eslint 9.39.4; next 16.4.6; prettier 3.9.4; turbo 2.10.2; typescript 5.9.3; vitest 3.2.6 |
+| react-compiler | 2026-11-27 | `2f447bb` | eslint 9.39.4; next 16.4.6; prettier 3.9.4; turbo 2.10.2; typescript 5.9.3; vitest 3.2.6 |

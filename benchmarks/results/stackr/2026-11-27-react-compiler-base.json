@@ -1,0 +1,82 @@
+{
+  "app": "stackr",
+  "label": "react-compiler-base",
+  "date": "2026-11-27",
+  "capturedAt": "2026-11-27T17:24:56.649Z",
+  "commit": "b531fd43377c0fe3662bab4ab3b6d0baf942da7d",
+  "ref": "origin/fix/pre-commit-eslint",
+  "machine": {
+    "id": "4082c3979c272de6",
+    "chip": "Apple M2 Max",
+    "cpus": 12,
+    "memoryGb": 96,
+    "os": "darwin 25.6.0"
+  },
+  "runtime": {
+    "node": "v24.16.0",
+    "pnpm": "11.5.2",
+    "hyperfine": "hyperfine 2.0.0"
+  },
+  "tools": {
+    "eslint": [
+      "9.39.3"
+    ],
+    "next": [
+      "16.4.6"
+    ],
+    "prettier": [
+      "3.8.1"
+    ],
+    "turbo": [
+      "2.8.12"
+    ],
+    "typescript": [
+      "5.9.3"
+    ],
+    "typescript-eslint": [
+      "8.56.1"
+    ],
+    "vitest": [
+      "3.2.6"
+    ]
+  },
+  "code": {
+    "files": 506,
+    "lines": 44347
+  },
+  "method": {
+    "runs": 5,
+    "warmup": 1,
+    "cachesCleared": "Turborepo (TURBO_FORCE), tsbuildinfo, .eslintcache, .next/cache, node_modules/.cache"
+  },
+  "steps": {
+    "format:check": {
+      "median": 2.63,
+      "min": 2.604,
+      "max": 2.645,
+      "runs": 5,
+      "failed": false
+    },
+    "lint": {
+      "median": 8.117,
+      "min": 8.06,
+      "max": 8.462,
+      "runs": 5,
+      "failed": false
+    },
+    "typecheck": {
+      "median": 12.812,
+      "min": 12.669,
+      "max": 12.842,
+      "runs": 5,
+      "failed": false
+    },
+    "build": {
+      "median": 19.115,
+      "min": 19.059,
+      "max": 19.314,
+      "runs": 5,
+      "failed": false
+    }
+  }
+}
