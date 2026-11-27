@@ -13,10 +13,8 @@
     "format:check": "pnpm run build && prettier --check . --ignore-path node_modules/@cteic/prettier-config/prettierignore --ignore-path .prettierignore",
     "lint": "pnpm run build && eslint .",
     "typecheck": "pnpm run build && pnpm --recursive run typecheck && tsc -p tsconfig.json",
-    "test": "pnpm run build && vitest run && node --test scripts/*.test.mjs && node scripts/check-coderabbit-drift.mjs .coderabbit.yaml && node scripts/toolchain-report.mjs --check",
-    "changeset": "changeset",
-    "bench:toolchain": "node scripts/toolchain-bench.mjs",
-    "bench:report": "node scripts/toolchain-report.mjs"
+    "test": "pnpm run build && vitest run && node --test scripts/*.test.mjs && node scripts/check-coderabbit-drift.mjs .coderabbit.yaml && node packages/install-policy/dist/cli.js",
+    "changeset": "changeset"
   },
   "devDependencies": {
     "@changesets/cli": "3.0.3",

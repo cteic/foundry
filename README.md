@@ -114,6 +114,14 @@ Dependency-free SVG charts. `@cteic/charts/core` turns data into SVG path string
 
 Privacy-first PostHog options for web (`@cteic/posthog/web`) and React Native (`@cteic/posthog/react-native`), plus path masking for pageviews and a typed `track` helper. Autocapture and session replay are off, and each app names its region. See [packages/posthog/README.md](packages/posthog/README.md).
 
+## Install policy
+
+Every repo sets the same pnpm install settings in `pnpm-workspace.yaml`. `pnpm install` and `pnpm add` then refuse releases younger than 3 days and install scripts nobody approved. `@cteic/install-policy` fails CI when a repo drifts from the baseline. See [docs/install-policy.md](docs/install-policy.md) for each setting, the attacks it stops, and how to approve a build script.
+
+```sh
+pnpm exec install-policy
+```
+
 ## Use the Renovate preset
 
 Add `renovate.json` to a repo:
