@@ -1,7 +1,7 @@
 {
   "name": "@cteic/commitlint-config",
   "version": "1.0.1",
-  "description": "Shared commitlint config for cteic projects: Conventional Commits with scopes",
+  "description": "Shared commitlint config for cteic projects: Conventional Commits with scopes, and no coding tool credit",
   "license": "AGPL-3.0-only",
   "type": "module",
   "repository": {
@@ -38,6 +38,7 @@
   },
   "dependencies": {
     "@commitlint/config-conventional": "21.2.4",
-    "@commitlint/types": "21.2.3"
+    "@commitlint/types": "21.2.3",
+    "@cteic/pr-clean": "workspace:^"
   }
 }

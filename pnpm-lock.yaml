@@ -119,6 +119,9 @@ importers:
       '@commitlint/types':
         specifier: 21.2.3
         version: 21.2.3
+      '@cteic/pr-clean':
+        specifier: workspace:^
+        version: link:../pr-clean
     devDependencies:
       '@commitlint/lint':
         specifier: 21.2.4
