@@ -1,0 +1,6 @@
+paths:
+  # actionlint 1.7.12 predates the job.workflow_repository and job.workflow_sha
+  # properties. The workflow guards against an empty value at run time.
+  .github/workflows/pr-clean.yml:
+    ignore:
+      - 'property "workflow_(repository|sha)" is not defined'

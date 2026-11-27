@@ -29,6 +29,10 @@ const fixes: Record<RuleName, string[]> = {
     'comment that holds pr-clean-allow, or list the file under "ignore".',
   ],
   'em-dash': ['Use a colon, a full stop or commas instead of the em dash (U+2014).'],
+  'claude-settings': [
+    'Add these keys to .claude/settings.json, keeping its other settings:',
+    '  "includeCoAuthoredBy": false, "attribution": { "commit": "", "pr": "" }',
+  ],
 };
 
 function plural(count: number, noun: string): string {
@@ -42,12 +46,15 @@ function place(location: Location): string {
   if (location.kind === 'file') {
     return `${location.path}:${String(location.line)}`;
   }
+  if (location.kind === 'path') {
+    return location.path;
+  }
   return `PR body:${String(location.line)}`;
 }
 
 function summaryRow(result: RuleResult): string {
   const count = result.status === 'fail' ? `  ${plural(result.findings.length, 'finding')}` : '';
-  return `  ${result.rule.padEnd(12)} ${result.status}${count}`;
+  return `  ${result.rule.padEnd(15)} ${result.status}${count}`;
 }
 
 function details(result: RuleResult): string[] {

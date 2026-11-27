@@ -1,4 +1,9 @@
 export {
+  checkClaudeSettings,
+  claudeSettingsBaseline,
+  claudeSettingsPath,
+} from './claude-settings.ts';
+export {
   defaultEmDashFiles,
   emptyConfig,
   loadConfig,

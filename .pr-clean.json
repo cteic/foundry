@@ -1,0 +1,3 @@
+{
+  "ignore": ["packages/pr-clean/src/patterns.ts", "packages/*/src/**/*.test.ts", "CHANGELOG.md"]
+}

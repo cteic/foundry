@@ -2,7 +2,13 @@ import type { AddedLine } from './diff.ts';
 import { firstMatch } from './glob.ts';
 import { allowMarker, creditPatterns, emDash, type Scope } from './patterns.ts';
 
-export const ruleNames = ['author', 'trailers', 'attribution', 'em-dash'] as const;
+export const ruleNames = [
+  'author',
+  'trailers',
+  'attribution',
+  'em-dash',
+  'claude-settings',
+] as const;
 
 export type RuleName = (typeof ruleNames)[number];
 
@@ -18,7 +24,8 @@ export interface Commit {
 export type Location =
   | { kind: 'commit'; commit: string }
   | { kind: 'file'; path: string; line: number }
-  | { kind: 'pr-body'; line: number };
+  | { kind: 'pr-body'; line: number }
+  | { kind: 'path'; path: string };
 
 export interface Finding {
   rule: RuleName;

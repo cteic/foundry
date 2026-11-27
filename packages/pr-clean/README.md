@@ -50,12 +50,13 @@ pnpm exec pr-clean --dry-run              # report, but always exit 0
 
 `pr-clean` reads the commits in `<base>..HEAD` and the lines the branch adds since the merge base. It never reads lines that were already on the base, so old text cannot fail a new branch.
 
-| Rule          | Fails when                                                                                          | Reads                                                             |
-| ------------- | --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| `author`      | A commit's author or committer is not on the allowed list. Both must match `Name <email>` exactly   | Commits                                                           |
-| `trailers`    | A commit message holds a co-author trailer, a credit line or a tool session link                    | Commit messages                                                   |
-| `attribution` | An added line, or the PR body, credits a coding tool                                                | Added lines, PR body                                              |
-| `em-dash`     | An em dash (U+2014) appears in an added line of a prose file, in a commit message or in the PR body | Added lines of `.md`, `.mdx` and `.txt`, commit messages, PR body |
+| Rule              | Fails when                                                                                                                                                                                             | Reads                                                             |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
+| `author`          | A commit's author or committer is not on the allowed list. Both must match `Name <email>` exactly                                                                                                      | Commits                                                           |
+| `trailers`        | A commit message holds a co-author trailer, a credit line or a tool session link                                                                                                                       | Commit messages                                                   |
+| `attribution`     | An added line, or the PR body, credits a coding tool                                                                                                                                                   | Added lines, PR body                                              |
+| `em-dash`         | An em dash (U+2014) appears in an added line of a prose file, in a commit message or in the PR body                                                                                                    | Added lines of `.md`, `.mdx` and `.txt`, commit messages, PR body |
+| `claude-settings` | `.claude/settings.json` is missing, or does not set `includeCoAuthoredBy` to `false` and `attribution.commit` and `attribution.pr` to `""`. Off unless `--claude-settings` or `"claudeSettings": true` | `.claude/settings.json` in the working tree                       |
 
 The `author` rule has no default list. With no allowed author and no `--skip author`, `pr-clean` exits 2 instead of passing a check it did not run.
 
@@ -94,6 +95,7 @@ When `pr-clean` checks the repo that holds its own source, it skips its own `src
 | `--pr-body-file <path>`   | none                     | Also check the PR body in this file                                   |
 | `--ignore <glob>`         | none                     | Skip matching paths in `attribution` and `em-dash`. Repeatable        |
 | `--em-dash-files <glob>`  | `*.md`, `*.mdx`, `*.txt` | Files the `em-dash` rule reads. Repeatable. `'*'` checks code as well |
+| `--claude-settings`       | off                      | Also run the `claude-settings` rule                                   |
 | `--json`                  | off                      | Print the report as JSON                                              |
 | `--dry-run`               | off                      | Report, but always exit 0                                             |
 | `--version`               |                          | Print the version                                                     |
@@ -119,7 +121,8 @@ Put defaults in `.pr-clean.json` at the repo root, or under a `pr-clean` key in 
   "allowAuthors": ["Ada Example <ada@example.com>"],
   "skip": [],
   "ignore": ["CHANGELOG.md"],
-  "emDashFiles": ["*.md", "*.mdx", "*.txt"]
+  "emDashFiles": ["*.md", "*.mdx", "*.txt"],
+  "claudeSettings": true
 }
 ```
 
@@ -149,7 +152,7 @@ Put defaults in `.pr-clean.json` at the repo root, or under a `pr-clean` key in 
 }
 ```
 
-`status` is `pass`, `fail` or `skipped`. A `location` is a commit, a file with a line number (`"kind": "file"`), or a line of the PR body (`"kind": "pr-body"`).
+`status` is `pass`, `fail` or `skipped`. A `location` is a commit, a file with a line number (`"kind": "file"`), a line of the PR body (`"kind": "pr-body"`), or a whole file (`"kind": "path"`).
 
 ## Commit subjects
 
@@ -172,7 +175,7 @@ git stops the push when `pr-clean` exits 1.
 
 ## CI
 
-Check out the pull request's head commit with full history. The default checkout is a merge commit that GitHub creates, and its committer is not yours.
+cteic repos call the reusable `pr-clean.yml` workflow in foundry instead: see the foundry README. For any other repo, check out the pull request's head commit with full history. The default checkout is a merge commit that GitHub creates, and its committer is not yours.
 
 ```yaml
 name: PR clean
