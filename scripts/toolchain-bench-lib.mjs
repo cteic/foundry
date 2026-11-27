@@ -93,8 +93,14 @@ function changeCell(before, after) {
   return withinNoise(before, after) ? `${text}, within noise` : text;
 }
 
-function sameMachine(a, b) {
-  return a.machine.chip === b.machine.chip && a.machine.cpus === b.machine.cpus;
+/** Runs compare only when both carry the same machine ID. Chip and core count alone match many laptops. */
+export function sameMachine(a, b) {
+  return typeof a.machine.id === 'string' && a.machine.id === b.machine.id;
+}
+
+/** Order runs by capture time, so two runs on one day never swap. */
+export function byCaptureTime(a, b) {
+  return (a.capturedAt ?? a.date).localeCompare(b.capturedAt ?? b.date);
 }
 
 /**
@@ -119,7 +125,7 @@ export function renderReport(runs) {
   ];
 
   for (const [app, appRuns] of [...byApp].sort(([a], [b]) => a.localeCompare(b))) {
-    const sorted = [...appRuns].sort((a, b) => a.date.localeCompare(b.date));
+    const sorted = [...appRuns].sort(byCaptureTime);
     const baseline = sorted[0];
     const latest = sorted[sorted.length - 1];
     lines.push(`## ${app}`, '');

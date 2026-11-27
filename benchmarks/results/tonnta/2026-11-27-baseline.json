@@ -2,9 +2,11 @@
   "app": "tonnta",
   "label": "baseline",
   "date": "2026-11-27",
+  "capturedAt": "2026-11-27T15:20:59.934Z",
   "commit": "26a88d8ab77282f47a021d0d95105c8dcb5156f1",
   "ref": "origin/dev",
   "machine": {
+    "id": "4082c3979c272de6",
     "chip": "Apple M2 Max",
     "cpus": 12,
     "memoryGb": 96,

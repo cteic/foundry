@@ -17,7 +17,7 @@ function run(overrides = {}) {
     label: 'baseline',
     date: '2026-11-27',
     commit: '3e9cdf22ed2d8db1931a0b774c3a33467a07ade8',
-    machine: { chip: 'Apple M2 Max', cpus: 12 },
+    machine: { id: 'a1b2c3d4e5f60718', chip: 'Apple M2 Max', cpus: 12 },
     tools: { typescript: ['5.7.3'] },
     code: { files: 120, lines: 9000 },
     steps: {
@@ -90,7 +90,11 @@ test('the report compares the baseline with the latest run on the same machine',
 });
 
 test('runs from different machines are never compared', () => {
-  const other = run({ label: 'ts7', date: '2026-12-10', machine: { chip: 'AMD EPYC', cpus: 4 } });
+  const other = run({
+    label: 'ts7',
+    date: '2026-12-10',
+    machine: { id: '0f1e2d3c4b5a6978', chip: 'AMD EPYC', cpus: 4 },
+  });
   const report = renderReport([run(), other]);
   assert.match(report, /different machine, so it is not compared/);
   assert.doesNotMatch(report, /Change/);
@@ -144,4 +148,37 @@ test('a change larger than both ranges is a result', () => {
   const before = { median: 20, min: 19, max: 21, runs: 5, failed: false };
   const after = { median: 2, min: 2, max: 2.5, runs: 5, failed: false };
   assert.equal(withinNoise(before, after), false);
+});
+
+test('two laptops with the same chip are different machines', () => {
+  const other = run({
+    label: 'ts7',
+    date: '2026-12-10',
+    machine: { id: '99887766554433aa', chip: 'Apple M2 Max', cpus: 12 },
+  });
+  assert.match(renderReport([run(), other]), /different machine, so it is not compared/);
+});
+
+test('a run without a machine ID is never compared', () => {
+  const legacy = run({ machine: { chip: 'Apple M2 Max', cpus: 12 } });
+  const after = run({ label: 'ts7', date: '2026-12-10' });
+  assert.match(renderReport([legacy, after]), /different machine, so it is not compared/);
+});
+
+test('two runs on one day keep their capture order', () => {
+  const morning = run({
+    label: 'baseline',
+    capturedAt: '2026-12-10T09:00:00.000Z',
+    date: '2026-12-10',
+  });
+  const afternoon = run({
+    label: 'ts7',
+    capturedAt: '2026-12-10T15:00:00.000Z',
+    date: '2026-12-10',
+    steps: { lint: { median: 10, min: 9, max: 11, runs: 5, failed: false } },
+  });
+  // Passed in reverse, as filename order would give them.
+  const report = renderReport([afternoon, morning]);
+  assert.match(report, /\| Step \| baseline \(2026-12-10\) \| Range \| ts7 \(2026-12-10\)/);
+  assert.match(report, /-30\.0 s \(-75%\)/);
 });

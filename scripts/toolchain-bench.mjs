@@ -8,6 +8,7 @@
 // its branch and its caches never affect the numbers. Needs git, pnpm and hyperfine.
 import { execFileSync } from 'node:child_process';
 import console from 'node:console';
+import { createHash } from 'node:crypto';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { cpus, platform, release, tmpdir, totalmem } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -28,6 +29,29 @@ const CLEAR_CACHES = [
 
 function run(command, args, options = {}) {
   return execFileSync(command, args, { encoding: 'utf8', ...options }).trim();
+}
+
+// A one-way hash of the hardware UUID. It tells two machines apart without
+// publishing the UUID itself.
+function machineId() {
+  let raw = '';
+  if (platform() === 'darwin') {
+    const match = /"IOPlatformUUID" = "([^"]+)"/.exec(
+      run('ioreg', ['-rd1', '-c', 'IOPlatformExpertDevice'])
+    );
+    raw = match?.[1] ?? '';
+  } else {
+    for (const path of ['/etc/machine-id', '/var/lib/dbus/machine-id']) {
+      try {
+        raw = readFileSync(path, 'utf8').trim();
+        break;
+      } catch {
+        // Try the next path.
+      }
+    }
+  }
+  if (!raw) throw new Error('could not read a machine ID, so the run could not be compared later');
+  return createHash('sha256').update(raw).digest('hex').slice(0, 16);
 }
 
 function codeSize(dir) {
@@ -54,7 +78,17 @@ function main() {
   try {
     console.log(`Cloning ${url} at ${options.ref}`);
     // --reference borrows the local checkout's objects, so the clone is quick.
-    run('git', ['clone', '--quiet', '--dissociate', '--reference', source, url, clone]);
+    // A stale commit-graph in the local checkout can break it, so a failure
+    // falls back to a plain clone.
+    try {
+      run('git', ['clone', '--quiet', '--dissociate', '--reference', source, url, clone], {
+        stdio: 'pipe',
+      });
+    } catch {
+      console.log('Clone with --reference failed, so cloning without it');
+      rmSync(clone, { recursive: true, force: true });
+      run('git', ['clone', '--quiet', url, clone]);
+    }
     run('git', ['-C', clone, 'checkout', '--quiet', '--detach', options.ref]);
     const commit = run('git', ['-C', clone, 'rev-parse', 'HEAD']);
 
@@ -99,14 +133,17 @@ function main() {
       steps[step] = summarise(result);
     }
 
-    const date = new Date().toISOString().slice(0, 10);
+    const capturedAt = new Date().toISOString();
+    const date = capturedAt.slice(0, 10);
     const record = {
       app: options.app,
       label: options.label,
       date,
+      capturedAt,
       commit,
       ref: options.ref,
       machine: {
+        id: machineId(),
         chip: cpus()[0]?.model ?? 'unknown',
         cpus: cpus().length,
         memoryGb: Math.round(totalmem() / 1024 ** 3),

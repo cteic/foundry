@@ -2,9 +2,11 @@
   "app": "foundry",
   "label": "baseline",
   "date": "2026-11-27",
+  "capturedAt": "2026-11-27T15:07:08.811Z",
   "commit": "3e9cdf22ed2d8db1931a0b774c3a33467a07ade8",
   "ref": "origin/dev",
   "machine": {
+    "id": "4082c3979c272de6",
     "chip": "Apple M2 Max",
     "cpus": 12,
     "memoryGb": 96,

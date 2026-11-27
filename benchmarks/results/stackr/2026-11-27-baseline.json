@@ -2,9 +2,11 @@
   "app": "stackr",
   "label": "baseline",
   "date": "2026-11-27",
+  "capturedAt": "2026-11-27T14:54:11.225Z",
   "commit": "8d53cab17c17c324dbcbc03e60f62bd1711e6392",
   "ref": "origin/dev",
   "machine": {
+    "id": "4082c3979c272de6",
     "chip": "Apple M2 Max",
     "cpus": 12,
     "memoryGb": 96,

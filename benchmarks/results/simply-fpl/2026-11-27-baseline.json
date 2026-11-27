@@ -2,9 +2,11 @@
   "app": "simply-fpl",
   "label": "baseline",
   "date": "2026-11-27",
+  "capturedAt": "2026-11-27T15:02:39.342Z",
   "commit": "8ca844366cead5ad9eeb445a550bd31b2541556c",
   "ref": "origin/dev",
   "machine": {
+    "id": "4082c3979c272de6",
     "chip": "Apple M2 Max",
     "cpus": 12,
     "memoryGb": 96,
