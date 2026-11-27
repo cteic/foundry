@@ -17,7 +17,7 @@ Each package is published to npm under `@cteic`.
 | -------------------------- | ------------------------------------------------------------------------------------------------------- |
 | `@cteic/tsconfig`          | Strict base: `strict`, `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`, `verbatimModuleSyntax` |
 | `@cteic/eslint-config`     | Flat config with `enum`, `as`, non-null `!` and `any` banned as errors, plus a `boundary()` helper      |
-| `@cteic/prettier-config`   | One format config with sorted, grouped imports                                                          |
+| `@cteic/prettier-config`   | One format config with sorted, grouped imports, plus a shared ignore list for lockfiles                 |
 | `@cteic/vitest-config`     | Node runner defaults, v8 coverage and an optional coverage floor                                        |
 | `@cteic/playwright-config` | CI retries and reporters, plus screenshot defaults for visual regression                                |
 | `@cteic/commitlint-config` | Conventional Commits, with an optional list of allowed scopes                                           |
@@ -48,6 +48,32 @@ export { default } from '@cteic/prettier-config';
 ```
 
 Imports are sorted by `@ianvs/prettier-plugin-sort-imports`, so adopting the preset reorders imports once.
+
+#### Keep Prettier off lockfiles
+
+The package also ships `prettierignore`, a list of generator-owned files. Point Prettier at it with `--ignore-path` and keep your repo's own `.prettierignore` as a second one:
+
+```json
+{
+  "scripts": {
+    "format": "prettier --write . --ignore-path node_modules/@cteic/prettier-config/prettierignore --ignore-path .prettierignore",
+    "format:check": "prettier --check . --ignore-path node_modules/@cteic/prettier-config/prettierignore --ignore-path .prettierignore"
+  }
+}
+```
+
+Pass both paths. Prettier reads `.prettierignore` automatically only while no `--ignore-path` is given, so the first flag silently drops your local ignores unless you name the file again.
+
+| Flag                                                               | Covers                                                                                                                                  |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `--ignore-path node_modules/@cteic/prettier-config/prettierignore` | Lockfiles: `pnpm-lock.yaml`, `package-lock.json`, `npm-shrinkwrap.json`, `yarn.lock`, `bun.lock`, `bun.lockb`, `deno.lock` and `*.lock` |
+| `--ignore-path .prettierignore`                                    | Whatever is specific to the repo, such as `dist/`, `coverage/` and `LICENSE`                                                            |
+
+Why it matters: a lockfile has one owner, the package manager. Prettier expands pnpm's inline `resolution: {integrity: sha512-...}` blocks across several lines and flips every quoted key to double quotes, then the next `pnpm install` rewrites them inline. Whichever ran last wins, and the churn hides the real dependency change. On this repo's 2,697-line lockfile Prettier produces a 2,761-line diff that re-resolves nothing.
+
+Patterns resolve against the directory Prettier runs in, not the ignore file's directory, and a pattern with no slash matches at any depth, so a nested `apps/web/pnpm-lock.yaml` is covered too.
+
+Adopting this in a repo whose lockfile Prettier has already reformatted takes one extra step: run the package manager's install once so it rewrites the lockfile in its native form, and commit that with the script change. Without it the next person to install produces the churn you just stopped generating.
 
 ### `@cteic/vitest-config`
 
