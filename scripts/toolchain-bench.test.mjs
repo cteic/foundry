@@ -182,3 +182,11 @@ test('two runs on one day keep their capture order', () => {
   assert.match(report, /\| Step \| baseline \(2026-12-10\) \| Range \| ts7 \(2026-12-10\)/);
   assert.match(report, /-30\.0 s \(-75%\)/);
 });
+
+test('the labeled baseline takes precedence over an earlier capture on the same day', () => {
+  const early = run({ label: 'zzz', capturedAt: '2026-11-27T09:00:00.000Z' });
+  const baseline = run({ capturedAt: '2026-11-27T12:00:00.000Z' });
+  const latest = run({ label: 'aaa', capturedAt: '2026-11-27T15:00:00.000Z' });
+  const report = renderReport([latest, baseline, early]);
+  assert.match(report, /\| Step \| baseline \(2026-11-27\) \| Range \| aaa \(2026-11-27\)/);
+});

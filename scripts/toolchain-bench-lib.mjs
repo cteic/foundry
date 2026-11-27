@@ -104,8 +104,8 @@ export function byCaptureTime(a, b) {
 }
 
 /**
- * Render the report: for each app, the first run (the baseline) against the
- * latest run. Runs from different machines are never compared.
+ * Render the report: compare the run labeled baseline (or the first capture
+ * if unlabeled) with the latest capture. Runs from different machines are never compared.
  */
 export function renderReport(runs) {
   const byApp = new Map();
@@ -126,7 +126,7 @@ export function renderReport(runs) {
 
   for (const [app, appRuns] of [...byApp].sort(([a], [b]) => a.localeCompare(b))) {
     const sorted = [...appRuns].sort(byCaptureTime);
-    const baseline = sorted[0];
+    const baseline = sorted.find((run) => run.label === 'baseline') ?? sorted[0];
     const latest = sorted[sorted.length - 1];
     lines.push(`## ${app}`, '');
     lines.push(
