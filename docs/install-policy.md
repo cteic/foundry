@@ -49,6 +49,18 @@ Earlier Nx releases carried provenance and the attacker published with a stolen 
 
 **Shai-Hulud, September 2025.** A self-replicating worm compromised over 500 packages. It stole credentials and used them to publish itself into more packages. A worm spreads in hours, so a 3-day wait puts every cteic repo behind its spread window. Write-up: [CISA alert, "Widespread Supply Chain Compromise Impacting npm Ecosystem"](https://www.cisa.gov/news-events/alerts/2025/09/23/widespread-supply-chain-compromise-impacting-npm-ecosystem).
 
+## Adopt the baseline in a repo
+
+1. Pin pnpm 11 in `package.json`: `"packageManager": "pnpm@11.5.2"`. pnpm 9 and 10 do not support most of these settings.
+2. Move the `pnpm` field from `package.json` into `pnpm-workspace.yaml` (`overrides`, `patchedDependencies`, `packageExtensions`, `auditConfig`). Move every non-auth setting out of `.npmrc` too, in camelCase: `engine-strict=true` becomes `engineStrict: true`. pnpm 11 ignores both old places.
+3. Paste the baseline block and run `pnpm install --frozen-lockfile`. pnpm checks every lockfile entry against the policy before it installs anything.
+4. Fix what it reports:
+   - A release younger than 3 days already in the lockfile: add its exact version to `minimumReleaseAgeExclude` with the date it clears, and delete the line after that date.
+   - A trust downgrade on an old release, for example `semver@6.3.1` from 2023: newer lines of the same package ship with provenance and the old line never did. Check the publish date on npm, then add the exact version to `trustPolicyExclude` with that date. Two versions of one package share an entry: `'semver@5.7.2 || 6.3.1'`.
+   - A recent release flagged as a trust downgrade is the case the setting exists for. Do not exclude it until you know why.
+5. Run `pnpm install --no-frozen-lockfile` once. pnpm 11 records patch hashes in a new format, so the lockfile changes without any version moving. pnpm also writes `set this to true or false` placeholders into `allowBuilds`. Replace each with a decision, as in the next section.
+6. Run the repo's own format step on `pnpm-lock.yaml` if it formats YAML.
+
 ## Approve a new build script
 
 `pnpm install` fails with a list of packages whose install scripts are not approved.
