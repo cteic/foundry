@@ -12,6 +12,7 @@ describe('parseConfig', () => {
       skip: ['em-dash'],
       ignore: ['CHANGELOG.md'],
       emDashFiles: ['*.md'],
+      claudeSettings: true,
     };
 
     expect(parseConfig(value, '.pr-clean.json')).toEqual(value);
@@ -23,6 +24,7 @@ describe('parseConfig', () => {
     ['a non-string base', { base: 1 }],
     ['a non-list allowAuthors', { allowAuthors: owner }],
     ['a non-string rule', { skip: [1] }],
+    ['a non-boolean claudeSettings', { claudeSettings: 'yes' }],
   ])('rejects %s', (_name, value) => {
     expect(() => parseConfig(value, '.pr-clean.json')).toThrow(UsageError);
   });
@@ -39,6 +41,7 @@ describe('resolveOptions', () => {
       skip: ['em-dash'],
       ignore: ['a.md', 'b.md'],
       emDashFiles: ['*.md', '*.mdx', '*.txt'],
+      claudeSettings: false,
     });
   });
 

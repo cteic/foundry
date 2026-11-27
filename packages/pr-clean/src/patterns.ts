@@ -20,6 +20,7 @@ export const toolNames: readonly string[] = [
   'Devin',
   'Windsurf',
   'Cline',
+  'CodeRabbit',
 ];
 
 const tools = toolNames.join('|');

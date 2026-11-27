@@ -1,8 +1,9 @@
-import { readFileSync, realpathSync } from 'node:fs';
-import { dirname, isAbsolute, relative, resolve } from 'node:path';
+import { existsSync, readFileSync, realpathSync } from 'node:fs';
+import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 
+import { checkClaudeSettings, claudeSettingsPath } from './claude-settings.ts';
 import { loadConfig, resolveOptions, UsageError, type Config, type Options } from './config.ts';
 import { parseAddedLines } from './diff.ts';
 import { diffAddedLines, GitError, listCommits, repoRoot, resolveBase } from './git.ts';
@@ -31,10 +32,12 @@ const help = `pr-clean: check a branch before its pull request goes public
 Usage: pr-clean [options]
 
 Rules:
-  author       Every commit's author and committer is on the allowed list
-  trailers     No co-author trailers or tool credit lines in commit messages
-  attribution  No tool credit lines in added lines or in the PR body
-  em-dash      No em dash in added prose lines, commit messages or the PR body
+  author           Every commit's author and committer is on the allowed list
+  trailers         No co-author trailers or tool credit lines in commit messages
+  attribution      No tool credit lines in added lines or in the PR body
+  em-dash          No em dash in added prose lines, commit messages or the PR body
+  claude-settings  .claude/settings.json turns off coding tool credit. Off unless
+                   --claude-settings is passed
 
 Options:
   --base <ref>              Ref to compare with. Default: origin/HEAD
@@ -43,6 +46,7 @@ Options:
   --pr-body-file <path>     Also check the PR body in this file
   --ignore <glob>           Skip matching paths in attribution and em-dash. Repeatable
   --em-dash-files <glob>    Files the em-dash rule reads. Repeatable. Default: *.md *.mdx *.txt
+  --claude-settings         Also run the claude-settings rule
   --json                    Print the report as JSON
   --dry-run                 Report, but always exit 0
   --version                 Print the version
@@ -83,6 +87,7 @@ function parseFlags(argv: string[]) {
         'pr-body-file': { type: 'string' },
         ignore: { type: 'string', multiple: true },
         'em-dash-files': { type: 'string', multiple: true },
+        'claude-settings': { type: 'boolean' },
         json: { type: 'boolean' },
         'dry-run': { type: 'boolean' },
         version: { type: 'boolean' },
@@ -106,6 +111,11 @@ function readBody(cwd: string, path: string | undefined): string | undefined {
   }
 }
 
+function readSettings(root: string): string | undefined {
+  const path = join(root, claudeSettingsPath);
+  return existsSync(path) ? readFileSync(path, 'utf8') : undefined;
+}
+
 function buildReport(
   root: string,
   options: Options,
@@ -123,9 +133,10 @@ function buildReport(
     trailers: () => checkTrailers(commits),
     attribution: () => checkAttribution(lines, prBody),
     'em-dash': () => checkEmDash(commits, lines, prBody, options.emDashFiles),
+    'claude-settings': () => checkClaudeSettings(readSettings(root)),
   };
   const rules = ruleNames.map((rule): RuleResult => {
-    if (options.skip.includes(rule)) {
+    if (options.skip.includes(rule) || (rule === 'claude-settings' && !options.claudeSettings)) {
       return { rule, status: 'skipped', findings: [] };
     }
     const findings = checks[rule]();
@@ -157,6 +168,7 @@ export function run(argv: string[], io: Io): number {
       skip: values.skip,
       ignore: values.ignore,
       emDashFiles: values['em-dash-files'],
+      claudeSettings: values['claude-settings'],
     };
     const root = repoRoot(io.cwd);
     const options = resolveOptions(flags, loadConfig(root));

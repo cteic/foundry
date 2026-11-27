@@ -105,6 +105,7 @@ describe('pr-clean in a real repository', () => {
       trailers: 'pass',
       attribution: 'pass',
       'em-dash': 'pass',
+      'claude-settings': 'skipped',
     });
   });
 
@@ -124,6 +125,7 @@ describe('pr-clean in a real repository', () => {
       ['co-authored-by'],
       ['built-with-tool'],
       ['em-dash'],
+      [],
     ]);
   });
 
@@ -209,6 +211,23 @@ describe('pr-clean in a real repository', () => {
     expect(prClean('--skip', 'author').stderr).toContain('Cannot find the base ref "origin/HEAD"');
     expect(prClean('--base', 'main', '--skip', 'author', '--pr-body-file', 'none.md').code).toBe(2);
     expect(prClean('--unknown').code).toBe(2);
+  });
+
+  it('checks .claude/settings.json with --claude-settings or the config key', () => {
+    const missing = prClean('--base', 'main', '--allow-author', owner, '--claude-settings');
+
+    expect(missing.code).toBe(1);
+    expect(missing.stdout).toContain('.claude/settings.json  missing');
+
+    write(
+      '.claude/settings.json',
+      JSON.stringify({ includeCoAuthoredBy: false, attribution: { commit: '', pr: '' } })
+    );
+    write('.pr-clean.json', JSON.stringify({ claudeSettings: true }));
+    const result = prClean('--base', 'main', '--allow-author', owner, '--json');
+
+    expect(result.code).toBe(0);
+    expect(statuses(jsonReport(result))).toMatchObject({ 'claude-settings': 'pass' });
   });
 
   it('prints help and exits 0', () => {

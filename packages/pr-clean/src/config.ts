@@ -9,6 +9,7 @@ export interface Config {
   skip: string[] | undefined;
   ignore: string[] | undefined;
   emDashFiles: string[] | undefined;
+  claudeSettings: boolean | undefined;
 }
 
 export interface Options {
@@ -17,6 +18,7 @@ export interface Options {
   skip: RuleName[];
   ignore: string[];
   emDashFiles: string[];
+  claudeSettings: boolean;
 }
 
 export class UsageError extends Error {}
@@ -29,6 +31,7 @@ export const emptyConfig: Config = {
   skip: undefined,
   ignore: undefined,
   emDashFiles: undefined,
+  claudeSettings: undefined,
 };
 
 const configKeys = Object.keys(emptyConfig);
@@ -66,12 +69,16 @@ export function parseConfig(value: unknown, source: string): Config {
   if (value.base !== undefined && typeof value.base !== 'string') {
     throw new UsageError(`${source}: base must be a string.`);
   }
+  if (value.claudeSettings !== undefined && typeof value.claudeSettings !== 'boolean') {
+    throw new UsageError(`${source}: claudeSettings must be true or false.`);
+  }
   return {
     base: value.base,
     allowAuthors: toStrings(value.allowAuthors, `${source}: allowAuthors`),
     skip: toStrings(value.skip, `${source}: skip`),
     ignore: toStrings(value.ignore, `${source}: ignore`),
     emDashFiles: toStrings(value.emDashFiles, `${source}: emDashFiles`),
+    claudeSettings: value.claudeSettings,
   };
 }
 
@@ -126,5 +133,6 @@ export function resolveOptions(flags: Config, config: Config): Options {
     skip,
     ignore: [...(config.ignore ?? []), ...(flags.ignore ?? [])],
     emDashFiles: flags.emDashFiles ?? config.emDashFiles ?? [...defaultEmDashFiles],
+    claudeSettings: flags.claudeSettings ?? config.claudeSettings ?? false,
   };
 }
