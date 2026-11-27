@@ -55,16 +55,16 @@ Range is the fastest and slowest run. A change smaller than the range of either 
 
 ## tonnta
 
-246 TypeScript files, 27239 lines at the baseline. Machine: Apple M2 Max, 12 cores.
+246 TypeScript files, 27290 lines at the baseline. Machine: Apple M2 Max, 12 cores.
 
 | Step | baseline (2026-11-27) | Range |
 | --- | ---: | ---: |
-| `format:check` | 3.1 s | 3.1-3.4 s |
-| `lint` | 5.9 s | 5.5-9.2 s |
-| `typecheck` | 8.2 s | 4.1-10.6 s |
-| `test` | 13.9 s | 13.4-22.1 s |
-| `build` | 34.0 s | 24.2-53.1 s |
+| `format:check` | 3.3 s | 3.3-3.8 s |
+| `lint` | 7.2 s | 6.5-15.7 s |
+| `typecheck` | 4.6 s | 4.1-7.3 s |
+| `test` | 11.3 s | 10.4-12.0 s |
+| `build` | 25.7 s | 23.1-33.0 s |
 
 | Run | Date | Commit | Tools |
 | --- | --- | --- | --- |
-| baseline | 2026-11-27 | `22a2c7e` | eslint 9.39.4; next 16.4.2; prettier 3.9.4; turbo 2.10.2; typescript 5.9.3; vitest 3.2.6 |
+| baseline | 2026-11-27 | `26a88d8` | eslint 9.39.4; next 16.4.6; prettier 3.9.4; turbo 2.10.2; typescript 5.9.3; vitest 3.2.6 |

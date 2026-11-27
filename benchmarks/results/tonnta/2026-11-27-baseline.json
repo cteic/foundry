@@ -2,7 +2,7 @@
   "app": "tonnta",
   "label": "baseline",
   "date": "2026-11-27",
-  "commit": "22a2c7e5318442a2c78a00cc3c694fd5f72c875a",
+  "commit": "26a88d8ab77282f47a021d0d95105c8dcb5156f1",
   "ref": "origin/dev",
   "machine": {
     "chip": "Apple M2 Max",
@@ -20,7 +20,7 @@
       "9.39.4"
     ],
     "next": [
-      "16.4.2"
+      "16.4.6"
     ],
     "prettier": [
       "3.9.4"
@@ -37,7 +37,7 @@
   },
   "code": {
     "files": 246,
-    "lines": 27239
+    "lines": 27290
   },
   "method": {
     "runs": 5,
@@ -46,37 +46,37 @@
   },
   "steps": {
     "format:check": {
-      "median": 3.123,
-      "min": 3.097,
-      "max": 3.446,
+      "median": 3.297,
+      "min": 3.282,
+      "max": 3.844,
       "runs": 5,
       "failed": false
     },
     "lint": {
-      "median": 5.87,
-      "min": 5.548,
-      "max": 9.216,
+      "median": 7.179,
+      "min": 6.467,
+      "max": 15.715,
       "runs": 5,
       "failed": false
     },
     "typecheck": {
-      "median": 8.215,
-      "min": 4.076,
-      "max": 10.613,
+      "median": 4.565,
+      "min": 4.14,
+      "max": 7.31,
       "runs": 5,
       "failed": false
     },
     "test": {
-      "median": 13.888,
-      "min": 13.39,
-      "max": 22.05,
+      "median": 11.3,
+      "min": 10.377,
+      "max": 12.002,
       "runs": 5,
       "failed": false
     },
     "build": {
-      "median": 34.012,
-      "min": 24.172,
-      "max": 53.11,
+      "median": 25.676,
+      "min": 23.069,
+      "max": 33.036,
       "runs": 5,
       "failed": false
     }
