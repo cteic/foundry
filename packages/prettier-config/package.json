@@ -14,10 +14,12 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./prettierignore": "./prettierignore",
     "./package.json": "./package.json"
   },
   "files": [
     "dist",
+    "prettierignore",
     "LICENSE"
   ],
   "scripts": {

@@ -1,6 +1,6 @@
 {
   "name": "@cteic/posthog",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Privacy-first PostHog defaults for cteic products: one config for web and React Native, path masking and typed events",
   "license": "AGPL-3.0-only",
   "type": "module",

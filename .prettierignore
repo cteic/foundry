@@ -1,5 +1,8 @@
-pnpm-lock.yaml
+# Lockfiles come from packages/prettier-config/prettierignore, passed as the
+# first --ignore-path. This file holds only what is specific to this repo.
 dist/
 coverage/
 LICENSE
 packages/*/LICENSE
+benchmarks/README.md
+benchmarks/results/

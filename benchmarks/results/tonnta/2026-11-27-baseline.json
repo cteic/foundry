@@ -1,0 +1,86 @@
+{
+  "app": "tonnta",
+  "label": "baseline",
+  "date": "2026-11-27",
+  "capturedAt": "2026-11-27T15:20:59.934Z",
+  "commit": "26a88d8ab77282f47a021d0d95105c8dcb5156f1",
+  "ref": "origin/dev",
+  "machine": {
+    "id": "4082c3979c272de6",
+    "chip": "Apple M2 Max",
+    "cpus": 12,
+    "memoryGb": 96,
+    "os": "darwin 25.6.0"
+  },
+  "runtime": {
+    "node": "v24.16.0",
+    "pnpm": "9.15.0",
+    "hyperfine": "hyperfine 2.0.0"
+  },
+  "tools": {
+    "eslint": [
+      "9.39.4"
+    ],
+    "next": [
+      "16.4.6"
+    ],
+    "prettier": [
+      "3.9.4"
+    ],
+    "turbo": [
+      "2.10.2"
+    ],
+    "typescript": [
+      "5.9.3"
+    ],
+    "vitest": [
+      "3.2.6"
+    ]
+  },
+  "code": {
+    "files": 246,
+    "lines": 27290
+  },
+  "method": {
+    "runs": 5,
+    "warmup": 1,
+    "cachesCleared": "Turborepo (TURBO_FORCE), tsbuildinfo, .eslintcache, .next/cache, node_modules/.cache"
+  },
+  "steps": {
+    "format:check": {
+      "median": 3.297,
+      "min": 3.282,
+      "max": 3.844,
+      "runs": 5,
+      "failed": false
+    },
+    "lint": {
+      "median": 7.179,
+      "min": 6.467,
+      "max": 15.715,
+      "runs": 5,
+      "failed": false
+    },
+    "typecheck": {
+      "median": 4.565,
+      "min": 4.14,
+      "max": 7.31,
+      "runs": 5,
+      "failed": false
+    },
+    "test": {
+      "median": 11.3,
+      "min": 10.377,
+      "max": 12.002,
+      "runs": 5,
+      "failed": false
+    },
+    "build": {
+      "median": 25.676,
+      "min": 23.069,
+      "max": 33.036,
+      "runs": 5,
+      "failed": false
+    }
+  }
+}
