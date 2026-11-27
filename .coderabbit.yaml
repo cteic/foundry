@@ -17,6 +17,10 @@ reviews:
   auto_review:
     enabled: true
     drafts: false
+    # One review per PR, when it opens or leaves draft. A follow-up push does
+    # not trigger another: comment `@coderabbitai review` to ask for one. This
+    # keeps the review quota for new PRs.
+    auto_incremental_review: false
     # Both, deliberately. `dev` is the integration branch, but `hotfix/*`
     # branches off `main` and those PRs go straight to production, the
     # last place to skip a review.

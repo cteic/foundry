@@ -2,6 +2,8 @@
 
 `base.yaml` is the review config every cteic repo uses. It reviews PRs to `dev` and `main` and keeps the convention and security path instructions.
 
+To save review quota, CodeRabbit reviews each PR once: when it opens, or when it leaves draft. A later push does not start another review, because `auto_incremental_review` is `false`. Comment `@coderabbitai review` on the PR to ask for one. Open agent PRs as drafts and mark them ready once the branch is final.
+
 ## What CodeRabbit supports
 
 CodeRabbit has a central configuration feature. It does not fit foundry today, so this repo ships a drift check instead.
