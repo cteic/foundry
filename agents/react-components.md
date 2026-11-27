@@ -227,6 +227,48 @@ The repo's general TypeScript rules still apply: `function` declarations for com
 
 Assert what renders, not how. A container test that only checks the mock was called once passes when the screen is blank. Most of the tests belong to the pure functions, because they are fast and need no renderer.
 
+## React Compiler
+
+Every cteic React app builds with React Compiler on. The compiler memoises components and hooks at build time, so the code stays plain.
+
+Do not write `useMemo`, `useCallback` or `memo` by hand. Write the plain version:
+
+```tsx
+// Avoid: the compiler already caches this.
+const facts = useMemo(() => forecastFacts(forecast), [forecast]);
+
+// Do this.
+const facts = forecastFacts(forecast);
+```
+
+Keep manual memoisation only in these two cases, each with a one-line comment that names the reason:
+
+| Case                                                  | Example                                                                     |
+| ----------------------------------------------------- | --------------------------------------------------------------------------- |
+| The compiler skips the component or hook (a bail-out) | `react-hooks/refs` reports the component, so its `useCallback` stays        |
+| A non-React library compares the value by reference   | A chart library that redraws whenever its `options` object changes identity |
+
+### Read a bail-out
+
+A bail-out means the compiler leaves one component or hook as written, because the code breaks a Rule of React. It still compiles the rest of the file.
+
+1. Run the app's lint. `@cteic/eslint-config/react` turns on the compiler rules at `error`. Each `react-hooks/*` error names the line and the rule that made the compiler skip that component.
+2. Read the rule name. `react-hooks/set-state-in-render` means the component sets state while rendering. The rule's message says how to fix it.
+3. Fix the code when you can. The compiler then compiles the component, and its manual memoisation can go.
+4. If you cannot fix it now, keep the memoisation and disable the rule on that line with the reason. Example: `// eslint-disable-next-line react-hooks/incompatible-library -- the table library mutates its own state`.
+5. To check at runtime, open React DevTools. A compiled component shows a `Memo ✨` badge. A component without the badge was skipped.
+
+A `"use no memo"` directive opts one component out by hand. Use it only to work around a compiler bug, with a comment that links the upstream issue.
+
+Turn the rules on in an app's `eslint.config`:
+
+```js
+import { createConfig } from '@cteic/eslint-config';
+import { react } from '@cteic/eslint-config/react';
+
+export default [...createConfig({ tsconfigRootDir: import.meta.dirname }), react()];
+```
+
 ## Review checklist
 
 Reviewers and CodeRabbit flag these in `.tsx` and `.jsx` files:
@@ -239,6 +281,7 @@ Reviewers and CodeRabbit flag these in `.tsx` and `.jsx` files:
 | Logic inline in JSX: ternary chains, thresholds, unit maths, string building             | A pure function in `lib/` with a unit test           |
 | An inline `style={{ ... }}` object literal beyond one computed value                     | Tokens or a named styled component                   |
 | A JSX return past about 40 lines                                                         | Named child components                               |
+| `useMemo`, `useCallback` or `memo` with no comment naming a bail-out or a library        | Delete it. React Compiler memoises the plain code    |
 
 ## Existing code
 

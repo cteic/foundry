@@ -14,6 +14,10 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "default": "./dist/react.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -34,12 +38,21 @@
   },
   "peerDependencies": {
     "eslint": "^10.0.0",
-    "typescript": ">=5.8.0 <6.1.0"
+    "typescript": ">=5.8.0 <6.1.0",
+    "eslint-plugin-react-hooks": "^7.1.1"
+  },
+  "peerDependenciesMeta": {
+    "eslint-plugin-react-hooks": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@cteic/tsconfig": "workspace:*",
     "@types/node": "24.19.2",
+    "@types/react": "19.3.3",
     "eslint": "10.14.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "react": "19.3.1",
     "typescript": "6.0.3",
     "vitest": "5.1.0"
   }
