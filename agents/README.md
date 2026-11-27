@@ -6,6 +6,7 @@ Product repos link to these files instead of restating them. One source means on
 | ------------------------------------------ | ------------------------------------------------------------------------------- |
 | [pr-standards.md](pr-standards.md)         | Size limits, quality gate, PR title and body, status comment, tests, authorship |
 | [react-components.md](react-components.md) | Container, presentational and layout components, pure logic, file names, tests  |
+| [testing.md](testing.md)                   | The testing trophy, queries, user events, what to fake, flaky tests             |
 
 ## Link from a product repo
 
@@ -23,6 +24,14 @@ A repo with React code (web or native) also adds:
 ## React components
 
 Follow https://github.com/cteic/foundry/blob/dev/agents/react-components.md for every component. Do not restate it here.
+```
+
+Every repo with tests also adds:
+
+```markdown
+## Testing
+
+Follow https://github.com/cteic/foundry/blob/dev/agents/testing.md for every test. Do not restate it here.
 ```
 
 Do not copy the rules into the repo. A copy drifts. If a repo needs a stricter rule, add only that rule next to the link.
