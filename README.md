@@ -6,7 +6,7 @@ Shared engineering foundation for cteic products. Every product repo extends it 
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Dependency updates | Renovate preset (`default.json`)                                                                                                                                          |
 | Configs            | Shared TypeScript, ESLint, Prettier, Vitest, Playwright and commitlint presets (`packages/`)                                                                              |
-| Libraries          | Shared code products import at runtime, starting with `@cteic/charts` (`packages/charts`)                                                                                 |
+| Libraries          | Shared code products import at runtime, such as `@cteic/charts` and `@cteic/posthog`                                                                                      |
 | CI                 | Reusable GitHub Actions workflows for code checks, page speed, bundle size and build time (`.github/workflows/`). Audit gate, PR checks and visual regression are planned |
 
 ## Config packages
@@ -83,6 +83,10 @@ export default createCommitlintConfig({ scopes: ['web', 'worker', 'deps'] });
 ### `@cteic/charts`
 
 Dependency-free SVG charts. `@cteic/charts/core` turns data into SVG path strings with no React and no DOM. `@cteic/charts/react` wraps them in components: price, line, area, depth and sparkline charts. See [packages/charts/README.md](packages/charts/README.md).
+
+### `@cteic/posthog`
+
+Privacy-first PostHog options for web (`@cteic/posthog/web`) and React Native (`@cteic/posthog/react-native`), plus path masking for pageviews and a typed `track` helper. Autocapture and session replay are off, and each app names its region. See [packages/posthog/README.md](packages/posthog/README.md).
 
 ## Use the Renovate preset
 

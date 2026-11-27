@@ -9,6 +9,7 @@
     "@cteic/commitlint-config": "workspace:*",
     "@cteic/eslint-config": "workspace:*",
     "@cteic/playwright-config": "workspace:*",
+    "@cteic/posthog": "workspace:*",
     "@cteic/prettier-config": "workspace:*",
     "@cteic/tsconfig": "workspace:*",
     "@cteic/vitest-config": "workspace:*",

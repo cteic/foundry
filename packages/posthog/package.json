@@ -1,0 +1,58 @@
+{
+  "name": "@cteic/posthog",
+  "version": "0.0.0",
+  "description": "Privacy-first PostHog defaults for cteic products: one config for web and React Native, path masking and typed events",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cteic/foundry.git",
+    "directory": "packages/posthog"
+  },
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/core/index.d.ts",
+      "default": "./dist/core/index.js"
+    },
+    "./web": {
+      "types": "./dist/web/index.d.ts",
+      "default": "./dist/web/index.js"
+    },
+    "./react-native": {
+      "types": "./dist/react-native/index.d.ts",
+      "default": "./dist/react-native/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "peerDependencies": {
+    "posthog-js": "^1.200.0",
+    "posthog-react-native": "^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "posthog-js": {
+      "optional": true
+    },
+    "posthog-react-native": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@cteic/tsconfig": "workspace:*",
+    "posthog-js": "1.455.4",
+    "posthog-react-native": "4.87.3",
+    "typescript": "6.0.3"
+  }
+}
