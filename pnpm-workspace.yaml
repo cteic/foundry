@@ -2,6 +2,31 @@ packages:
   - packages/*
   - fixtures/*
 
+# Supply-chain baseline. docs/install-policy.md explains each setting.
+# install-policy (packages/install-policy) fails CI when these drift.
+
+# Refuse releases younger than 3 days, the same wait Renovate uses.
+minimumReleaseAge: 4320
+minimumReleaseAgeExclude:
+  - '@cteic/*'
+  # The five entries below were in the lockfile before this policy landed.
+  # Each clears the 3-day wait by 2026-11-29. Delete them after that date.
+  - '@posthog/browser-common@0.14.2' # clears 2026-11-28
+  - '@posthog/types@1.427.2' # in the lockfile before the policy, clears 2026-11-28
+  - '@types/react@19.3.3' # in the lockfile before the policy, clears 2026-11-28
+  - 'posthog-js@1.455.4' # in the lockfile before the policy, clears 2026-11-29
+  - 'posthog-react-native@4.87.3' # in the lockfile before the policy, clears 2026-11-28
+minimumReleaseAgeStrict: true
+
+# Fail the install when a dependency has an install script nobody approved.
+strictDepBuilds: true
+
+# Fail the install when a release has weaker provenance than earlier ones.
+trustPolicy: no-downgrade
+
+# Only direct dependencies may come from git or tarball URLs.
+blockExoticSubdeps: true
+
 allowBuilds:
   core-js: false
 

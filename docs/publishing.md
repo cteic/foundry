@@ -46,3 +46,4 @@ The npm docs also say the first successful publish must happen within 2 days of 
 - `@cteic/validate`
 - `@cteic/charts`
 - `@cteic/posthog`
+- `@cteic/install-policy`
