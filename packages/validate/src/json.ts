@@ -9,14 +9,14 @@ export type JsonTextResult =
  */
 export function exceedsDepth(text: string, maxDepth: number): boolean {
   let depth = 0;
-  let inString = false;
+  let isInString = false;
   for (let index = 0; index < text.length; index += 1) {
     const char = text[index];
-    if (inString) {
+    if (isInString) {
       if (char === '\\') index += 1;
-      else if (char === '"') inString = false;
+      else if (char === '"') isInString = false;
     } else if (char === '"') {
-      inString = true;
+      isInString = true;
     } else if (char === '{' || char === '[') {
       depth += 1;
       if (depth > maxDepth) return true;

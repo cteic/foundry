@@ -40,15 +40,26 @@ describe('@cteic/eslint-config bans', () => {
     ['type-assertion.ts', '@typescript-eslint/consistent-type-assertions'],
     ['non-null-assertion.ts', '@typescript-eslint/no-non-null-assertion'],
     ['explicit-any.ts', '@typescript-eslint/no-explicit-any'],
+    ['max-lines.ts', 'max-lines'],
+    ['max-lines-per-function.ts', 'max-lines-per-function'],
+    ['max-params.ts', 'max-params'],
+    ['complexity.ts', 'complexity'],
+    ['max-depth.ts', 'max-depth'],
+    ['naming-convention.ts', '@typescript-eslint/naming-convention'],
+    ['interface-prefix.ts', '@typescript-eslint/naming-convention'],
+    ['BadName.ts', 'cteic/filename-case'],
   ])('%s reports only %s, as an error', async (file, rule) => {
     const messages = await lintFixture(file);
 
     expect(messages.map((message) => [message.ruleId, message.severity])).toEqual([[rule, 2]]);
   });
 
-  it.each(['clean.ts', 'clean.js'])('%s passes with no messages', async (file) => {
-    expect(await lintFixture(file)).toEqual([]);
-  });
+  it.each(['clean.ts', 'clean.js', 'clean-booleans.ts'])(
+    '%s passes with no messages',
+    async (file) => {
+      expect(await lintFixture(file)).toEqual([]);
+    }
+  );
 });
 
 describe('boundary', () => {
@@ -127,5 +138,33 @@ describe('rule sets', () => {
     const entry: unknown = Object.entries(rules).find(([name]) => name === rule)?.[1];
 
     expect(Array.isArray(entry) ? entry[0] : entry).toBe(2);
+  });
+});
+
+describe('size limits', () => {
+  it('lets a test file run to 500 lines', async () => {
+    expect(await lintFixture('long.spec.ts')).toEqual([]);
+  });
+
+  it('skips the size rules for a file on the oversized list', async () => {
+    const eslint = new ESLint({
+      cwd: fixturesDir,
+      overrideConfigFile: true,
+      overrideConfig: createConfig({ tsconfigRootDir: fixturesDir, oversized: ['max-lines.ts'] }),
+    });
+    const [result] = await eslint.lintFiles(['max-lines.ts']);
+
+    expect(result?.messages).toEqual([]);
+  });
+
+  it('still applies the other rules to a file on the oversized list', async () => {
+    const eslint = new ESLint({
+      cwd: fixturesDir,
+      overrideConfigFile: true,
+      overrideConfig: createConfig({ tsconfigRootDir: fixturesDir, oversized: ['enum.ts'] }),
+    });
+    const [result] = await eslint.lintFiles(['enum.ts']);
+
+    expect(result?.messages.map((message) => message.ruleId)).toEqual(['no-restricted-syntax']);
   });
 });

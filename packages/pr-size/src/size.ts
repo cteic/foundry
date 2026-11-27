@@ -92,12 +92,12 @@ export function parseNumstat(output: string): FileChange[] {
       path = tokens[index + 1] ?? '';
       index += 2;
     }
-    const binary = added === '-' || deleted === '-';
+    const isBinary = added === '-' || deleted === '-';
     changes.push({
       path,
-      added: binary ? 0 : Number(added),
-      deleted: binary ? 0 : Number(deleted),
-      binary,
+      added: isBinary ? 0 : Number(added),
+      deleted: isBinary ? 0 : Number(deleted),
+      binary: isBinary,
     });
   }
   return changes;

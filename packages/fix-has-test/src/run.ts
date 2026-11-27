@@ -97,9 +97,9 @@ function buildReport(root: string, options: Options, dryRun: boolean): Report {
     findTestFiles(changedFiles(root, base), options.testGlobs),
     findRustTests(parseAddedLines(diffRustFiles(root, base)))
   );
-  const needsTest = fixes.some((fix) => fix.status === 'needs-test');
+  const doesNeedTest = fixes.some((fix) => fix.status === 'needs-test');
   return {
-    verdict: needsTest && testFiles.length === 0 ? 'fail' : 'pass',
+    verdict: doesNeedTest && testFiles.length === 0 ? 'fail' : 'pass',
     dryRun,
     base,
     commits: commits.length,
