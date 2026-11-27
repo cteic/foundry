@@ -180,6 +180,10 @@ jobs:
 
 The calling job needs `contents: read` and `pull-requests: write`. No secret is needed. Set a budget only from a measured baseline: the median of at least five runs, with the machine and the command recorded. [docs/measurement.md](docs/measurement.md) has the caller snippet, the inputs and the script contract for each workflow.
 
+### Toolchain benchmarks
+
+`pnpm bench:toolchain` times an app's format check, lint, typecheck, tests and build with every cache cleared, and records the result in `benchmarks/results`. [benchmarks/README.md](benchmarks/README.md) compares each app's baseline with its latest run. [docs/toolchain-benchmarks.md](docs/toolchain-benchmarks.md) has the method and the rules for a fair comparison.
+
 ## Working with coding agents
 
 [docs/working-with-agents.md](docs/working-with-agents.md) teaches the habits for working with coding agents: twelve rules, each with a real case from a cteic repo and an exercise, plus a repo setup checklist and a 90-minute team session. The rules agents themselves follow live in [agents/](agents/README.md).
