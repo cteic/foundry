@@ -1,6 +1,6 @@
 {
   "name": "@cteic/install-policy",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "CLI that fails CI when a repo's pnpm install settings drift from the cteic supply-chain baseline",
   "license": "AGPL-3.0-only",
   "type": "module",
