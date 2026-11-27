@@ -207,3 +207,7 @@ jobs:
 | `file`     | `comment.md` | Markdown file inside the artifact                           |
 
 It keeps one comment per pull request per marker. It only edits a comment that `github-actions[bot]` wrote and that starts with the marker. It does nothing on an event that is not `pull_request`, and nothing on a pull request from a fork.
+
+## Toolchain benchmarks
+
+The workflows above measure one pull request against its base on a shared runner. To compare a toolchain change across every app on one machine, such as TypeScript 7 or Oxlint, use the toolchain bench in [toolchain-benchmarks.md](toolchain-benchmarks.md).

@@ -3,3 +3,5 @@ dist/
 coverage/
 LICENSE
 packages/*/LICENSE
+benchmarks/README.md
+benchmarks/results/
