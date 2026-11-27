@@ -40,6 +40,17 @@ export default createConfig({ tsconfigRootDir: import.meta.dirname });
 
 Add `boundary({ files, imports, globals, message })` to the array to keep a package free of given imports and globals.
 
+The preset also enforces size and naming limits: 300 lines per file, 50 lines per function, 3 parameters, complexity 10, nesting 3, kebab-case file names, and `is`/`has`/`should` prefixes on booleans. [agents/clean-code.md](agents/clean-code.md) explains each one. List files that were already over a size limit when the repo adopted the preset, and split them over time:
+
+```js
+export default createConfig({
+  tsconfigRootDir: import.meta.dirname,
+  oversized: ['apps/web/src/lib/diary.ts'],
+});
+```
+
+The size rules skip only the listed files. Every other rule still applies to them.
+
 ### `@cteic/prettier-config`
 
 ```js

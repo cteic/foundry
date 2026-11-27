@@ -23,13 +23,13 @@ export function createPlaywrightConfig(
   overrides: PlaywrightTestConfig = {},
   env: NodeJS.ProcessEnv = process.env
 ): PlaywrightTestConfig {
-  const ci = isCi(env);
+  const isRunningInCi = isCi(env);
   return defineConfig(
     {
       fullyParallel: true,
-      forbidOnly: ci,
-      retries: ci ? 2 : 0,
-      reporter: ci ? 'blob' : 'list',
+      forbidOnly: isRunningInCi,
+      retries: isRunningInCi ? 2 : 0,
+      reporter: isRunningInCi ? 'blob' : 'list',
       use: {
         trace: 'on-first-retry',
       },

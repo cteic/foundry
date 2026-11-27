@@ -3,9 +3,16 @@ import type { Linter } from 'eslint';
 import type { Config } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 
+import { filenameCase } from './filename-case.js';
+
 export interface CreateConfigOptions {
   tsconfigRootDir?: string;
   ignores?: string[];
+  /**
+   * Files that were over a size limit before the limits landed. The size rules skip only
+   * these files, so new code obeys the limits and the list shrinks as files are split.
+   */
+  oversized?: string[];
 }
 
 export interface BoundaryOptions {
@@ -16,6 +23,14 @@ export interface BoundaryOptions {
 }
 
 const typeScriptFiles = ['**/*.{ts,tsx,mts,cts}'];
+
+const testFiles = [
+  '**/*.{test,spec}.{ts,tsx,mts,cts,js,jsx,mjs,cjs}',
+  '**/__tests__/**',
+  '**/e2e/**',
+];
+
+const generatedFiles = ['**/*.generated.*', '**/__generated__/**'];
 
 const defaultIgnores = [
   '**/dist/**',
@@ -41,12 +56,101 @@ export const bannedRules: Linter.RulesRecord = {
   '@typescript-eslint/no-explicit-any': 'error',
 };
 
-export function createConfig(options: CreateConfigOptions = {}): Config[] {
-  const parserOptions =
-    options.tsconfigRootDir === undefined
-      ? { projectService: true }
-      : { projectService: true, tsconfigRootDir: options.tsconfigRootDir };
+/**
+ * Size limits a reviewer can hold in their head, set from the measured size of cteic apps.
+ * Blank lines and comments do not count.
+ */
+export const sizeRules: Linter.RulesRecord = {
+  'max-lines': ['error', { max: 300, skipBlankLines: true, skipComments: true }],
+  'max-lines-per-function': [
+    'error',
+    { max: 50, skipBlankLines: true, skipComments: true, IIFEs: true },
+  ],
+  'max-params': ['error', { max: 3 }],
+  complexity: ['error', { max: 10 }],
+  'max-depth': ['error', { max: 3 }],
+};
 
+const sizeRulesOff: Linter.RulesRecord = Object.fromEntries(
+  Object.keys(sizeRules).map((name) => [name, 'off'])
+);
+
+const booleanPrefixes = ['is', 'has', 'should', 'can', 'did', 'will', 'was', 'are', 'does'];
+
+/** Names that say what a thing is. Type information decides which variables are booleans. */
+export const namingRules: Linter.RulesRecord = {
+  '@typescript-eslint/naming-convention': [
+    'error',
+    { selector: 'typeLike', format: ['PascalCase'] },
+    {
+      selector: 'interface',
+      format: ['PascalCase'],
+      custom: { regex: '^I[A-Z]', match: false },
+    },
+    {
+      selector: 'variable',
+      format: ['camelCase', 'PascalCase', 'UPPER_CASE'],
+      leadingUnderscore: 'allow',
+    },
+    { selector: 'function', format: ['camelCase', 'PascalCase'] },
+    { selector: 'parameter', format: ['camelCase', 'PascalCase'], leadingUnderscore: 'allow' },
+    {
+      selector: 'variable',
+      types: ['boolean'],
+      format: ['PascalCase', 'UPPER_CASE'],
+      prefix: [...booleanPrefixes, ...booleanPrefixes.map((prefix) => `${prefix.toUpperCase()}_`)],
+    },
+    // A destructured name comes from elsewhere, such as props or an API, so it is not checked here.
+    { selector: 'variable', modifiers: ['destructured'], format: null },
+    // The boolean rule names a type, which outranks a modifier, so destructured booleans repeat the exemption.
+    { selector: 'variable', modifiers: ['destructured'], types: ['boolean'], format: null },
+    { selector: 'parameter', modifiers: ['destructured'], format: null },
+  ],
+};
+
+function parserOptionsFor(options: CreateConfigOptions) {
+  return options.tsconfigRootDir === undefined
+    ? { projectService: true }
+    : { projectService: true, tsconfigRootDir: options.tsconfigRootDir };
+}
+
+function typeScriptConfigs(options: CreateConfigOptions): Config[] {
+  return [
+    ...[...tseslint.configs.strictTypeChecked, ...tseslint.configs.stylisticTypeChecked].map(
+      (config) => ({ ...config, files: typeScriptFiles })
+    ),
+    {
+      files: typeScriptFiles,
+      languageOptions: { parserOptions: parserOptionsFor(options) },
+      rules: {
+        ...bannedRules,
+        ...namingRules,
+        '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
+        '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      },
+    },
+  ];
+}
+
+function sizeConfigs(options: CreateConfigOptions): Config[] {
+  const configs: Config[] = [
+    { rules: sizeRules },
+    {
+      files: testFiles,
+      rules: {
+        'max-lines': ['error', { max: 500, skipBlankLines: true, skipComments: true }],
+        'max-lines-per-function': 'off',
+      },
+    },
+    { files: generatedFiles, rules: sizeRulesOff },
+  ];
+  if (options.oversized !== undefined && options.oversized.length > 0) {
+    configs.push({ files: options.oversized, rules: sizeRulesOff });
+  }
+  return configs;
+}
+
+export function createConfig(options: CreateConfigOptions = {}): Config[] {
   return [
     { ignores: [...defaultIgnores, ...(options.ignores ?? [])] },
     {
@@ -56,27 +160,16 @@ export function createConfig(options: CreateConfigOptions = {}): Config[] {
       },
     },
     js.configs.recommended,
-    ...[...tseslint.configs.strictTypeChecked, ...tseslint.configs.stylisticTypeChecked].map(
-      (config) => ({
-        ...config,
-        files: typeScriptFiles,
-      })
-    ),
+    ...typeScriptConfigs(options),
     {
-      files: typeScriptFiles,
-      languageOptions: { parserOptions },
-      rules: {
-        ...bannedRules,
-        '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
-        '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-      },
-    },
-    {
+      plugins: { cteic: { rules: { 'filename-case': filenameCase } } },
       rules: {
         'prefer-const': 'error',
         'no-nested-ternary': 'error',
+        'cteic/filename-case': 'error',
       },
     },
+    ...sizeConfigs(options),
   ];
 }
 

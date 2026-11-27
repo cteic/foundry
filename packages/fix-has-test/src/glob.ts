@@ -7,9 +7,9 @@ export function globToRegExp(glob: string): RegExp {
   while (index < pattern.length) {
     const char = pattern.charAt(index);
     if (char === '*' && pattern.charAt(index + 1) === '*') {
-      const beforeSlash = pattern.charAt(index + 2) === '/';
-      source += beforeSlash ? '(?:.*/)?' : '.*';
-      index += beforeSlash ? 3 : 2;
+      const isBeforeSlash = pattern.charAt(index + 2) === '/';
+      source += isBeforeSlash ? '(?:.*/)?' : '.*';
+      index += isBeforeSlash ? 3 : 2;
     } else if (char === '*') {
       source += '[^/]*';
       index += 1;
