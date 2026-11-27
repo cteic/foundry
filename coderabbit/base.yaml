@@ -41,6 +41,20 @@ reviews:
         non-kebab-case filenames.
         Do not comment on pre-existing comments unless the diff changes them,
         and do not suggest adding comments.
+    - path: '**/*.{tsx,jsx}'
+      instructions: >-
+        Apply the cteic React component architecture
+        (https://github.com/cteic/foundry/blob/dev/agents/react-components.md).
+        Flag: a component that fetches data or runs effects and also renders
+        more than a composition of child components (split it into a
+        container and presentational components); `useEffect`, data-library
+        hooks, router hooks, storage or analytics inside a presentational or
+        layout component; a layout component that takes domain data; logic
+        inline in JSX or a component body (ternary chains, thresholds, unit
+        maths, string building) instead of a unit-tested pure function in
+        `lib/` or a data package; inline `style={{ ... }}` object literals
+        beyond one computed value; a JSX return longer than about 40 lines
+        that should be named child components.
     - path: '**/*.{ts,tsx,js,jsx,mjs,cjs,astro}'
       instructions: >-
         Treat any secret reaching the client bundle as a blocking defect.
